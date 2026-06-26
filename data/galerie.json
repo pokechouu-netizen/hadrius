@@ -1,6 +1,6 @@
 {
   "_commentaire": "Toutes les photos du site, modifiables depuis /admin → Photos & galerie. 'logo' = logo en-tête, 'hero' = grande photo de devanture en haut, 'photos' = galerie filtrée (categorie : plats / ambiance / terrasse).",
-  "logo": "assets/uploads/1782517860574_brique-refractaire-pleine-vieillie-rouge-22x105x5.jpg",
+  "logo": "assets/uploads/1782517887703_logo-hadrius.jpg",
   "hero": "assets/devanture.jpg",
   "photos": [
     {

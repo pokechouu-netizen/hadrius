@@ -99,7 +99,7 @@
   (function () {
     'use strict';
     var FILE = 'data/galerie.json';
-    var data = { logo: '', hero: '', photos: [] }, sha = '', edit = -1, pendingImg = null;
+    var data = { logo: '', hero: '', photos: [] }, sha = '', edit = -1, pendingImg = null, pendingPreview = null, previews = {};
 
     CMS.requireAuth(load);
 
@@ -129,9 +129,13 @@
 
     window.onSlot = function (input, key) {
       if (!input.files || !input.files[0]) return;
+      var file = input.files[0];
+      // Aperçu immédiat depuis le fichier choisi (l'image déployée n'existe qu'après le redéploiement ~1 min)
+      var img = document.getElementById('img-' + key), empty = document.getElementById('empty-' + key);
+      img.src = URL.createObjectURL(file); img.style.display = 'block'; empty.style.display = 'none';
       CMS.status('saving', 'Téléversement…');
-      CMS.uploadImage(input.files[0]).then(function (path) {
-        data[key] = path; setSlot(key, path);
+      CMS.uploadImage(file).then(function (path) {
+        data[key] = path;
         return persist('Mise à jour photo : ' + key);
       }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); });
     };
@@ -142,7 +146,8 @@
       el.innerHTML = '';
       data.photos.forEach(function (c, i) {
         var d = document.createElement('div'); d.className = 'item-card';
-        var img = c.image ? '<img class="thumb" src="' + CMS.esc(CMS.imgSrc(c.image)) + '" alt="">' : '<div class="no-thumb">📷</div>';
+        var src = previews[c.id] || (c.image ? CMS.imgSrc(c.image) : '');
+        var img = src ? '<img class="thumb" src="' + CMS.esc(src) + '" alt="">' : '<div class="no-thumb">📷</div>';
         d.innerHTML = img +
           '<div class="item-card__body">' +
             '<div class="item-card__title">' + (CMS.eh(c.legende) || '<em style="color:var(--muted)">Sans légende</em>') +
@@ -166,7 +171,7 @@
     };
 
     window.openModal = function (i) {
-      edit = i; pendingImg = null;
+      edit = i; pendingImg = null; pendingPreview = null;
       var c = i === -1 ? {} : data.photos[i];
       document.getElementById('modalTitle').textContent = i === -1 ? 'Nouvelle photo' : 'Modifier la photo';
       document.getElementById('f_cat').value = c.categorie || 'plats';
@@ -186,10 +191,15 @@
 
     window.onPhoto = function (input) {
       if (!input.files || !input.files[0]) return;
+      var file = input.files[0];
       var hint = document.getElementById('photoHint');
+      // Aperçu immédiat depuis le fichier choisi (l'image déployée n'existe qu'après le redéploiement ~1 min)
+      pendingPreview = URL.createObjectURL(file);
+      var img = document.getElementById('photoImg'), empty = document.getElementById('photoEmpty');
+      img.src = pendingPreview; img.style.display = 'block'; empty.style.display = 'none';
       hint.textContent = 'Téléversement…';
-      CMS.uploadImage(input.files[0]).then(function (path) {
-        pendingImg = path; setPhoto(path); hint.textContent = 'Photo prête ✓ — cliquez « Enregistrer ».';
+      CMS.uploadImage(file).then(function (path) {
+        pendingImg = path; hint.textContent = 'Photo prête ✓ — cliquez « Enregistrer ».';
       }).catch(function (e) { hint.textContent = 'Erreur de téléversement'; console.error(e); });
     };
 
@@ -202,6 +212,7 @@
       c.visible = document.getElementById('f_visible').checked;
       if (pendingImg) c.image = pendingImg;
       if (!c.id) c.id = 'g' + Date.now();
+      if (pendingPreview) previews[c.id] = pendingPreview;
       if (edit === -1) data.photos.push(c);
       persist((edit === -1 ? 'Ajout photo galerie' : 'Modif photo galerie'))
         .then(function () { closeModal(); render(); })

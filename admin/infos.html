@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Infos & contact — Restaurant Hadrius</title>
+  <link rel="icon" href="../assets/logo-hadrius.jpg">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <div class="brand">Restaurant Hadrius</div>
+    <h1>Infos &amp; contact</h1>
+    <p>Connectez-vous pour modifier les coordonnées, réseaux et le popup.</p>
+    <button class="btn-login" onclick="CMS.login()">Se connecter</button>
+  </div>
+
+  <div id="adminScreen">
+    <div class="topbar">
+      <h1>⚙️ Infos &amp; contact</h1>
+      <span class="status" id="statusEl"></span>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Admin</a>
+      <a href="../index.html#infos" target="_blank" class="btn btn-ghost btn-sm">Voir le site ↗</a>
+      <button class="btn-text" onclick="CMS.logout()">Déconnexion</button>
+    </div>
+
+    <div class="panel active">
+      <div class="section-card">
+        <p class="section-card__title">📍 Coordonnées</p>
+        <div class="fg"><label>Adresse</label><input type="text" id="adresse" placeholder="5 Rue Bernard Noël"></div>
+        <div class="frow">
+          <div class="fg"><label>Code postal</label><input type="text" id="code_postal" placeholder="84110"></div>
+          <div class="fg"><label>Ville</label><input type="text" id="ville" placeholder="Vaison-la-Romaine"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label>Téléphone</label><input type="text" id="telephone" placeholder="04 90 41 75 12"></div>
+          <div class="fg"><label>Email</label><input type="text" id="email" placeholder="restaurant.hadrius@gmail.com"></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-card__title">🗺️ Plan (Google Maps)</p>
+        <div class="fg"><label>Adresse affichée sur la carte</label><input type="text" id="maps_query" placeholder="5 Rue Bernard Noël, 84110 Vaison-la-Romaine"><span class="hint">L'adresse recherchée dans Google Maps sur le site. En général identique à l'adresse ci-dessus.</span></div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-card__title">📱 Réseaux sociaux</p>
+        <div class="fg"><label>Lien Facebook</label><input type="text" id="facebook" placeholder="https://www.facebook.com/..."></div>
+        <div class="fg"><label>Lien Instagram</label><input type="text" id="instagram" placeholder="https://www.instagram.com/restohadrius/"></div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-card__title">🔔 Popup (message à l'ouverture du site)</p>
+        <div class="fg" style="flex-direction:row;align-items:center;gap:.5rem">
+          <input type="checkbox" id="p_actif" style="width:auto">
+          <label for="p_actif" style="text-transform:none;letter-spacing:0;font-size:.9rem;color:var(--ink)">Afficher le popup sur le site</label>
+        </div>
+        <div class="fg"><label>Message</label><textarea id="p_message" rows="2" placeholder="Ex : Fermeture exceptionnelle le 15 août"></textarea></div>
+        <div class="frow">
+          <div class="fg"><label>Texte du bouton</label><input type="text" id="p_cta_label" placeholder="Réserver une table"></div>
+          <div class="fg"><label>Lien du bouton</label><input type="text" id="p_cta_url" placeholder="tel:+33490417512"><span class="hint">Ex : #acces, #menu ou un lien tel:</span></div>
+        </div>
+        <div class="fg" style="max-width:240px"><label>Délai d'apparition (secondes)</label><input type="number" id="p_delai" min="0" value="5"></div>
+      </div>
+
+      <div class="form-save-row">
+        <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="cms.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var FILE = 'data/infos.json';
+    var data = {}, sha = '';
+    function v(id) { return document.getElementById(id).value; }
+    function setv(id, val) { var el = document.getElementById(id); if (el) el.value = val == null ? '' : val; }
+
+    CMS.requireAuth(load);
+
+    function load() {
+      CMS.status('saving', 'Chargement…');
+      CMS.load(FILE).then(function (r) {
+        data = r.data; sha = r.sha;
+        var p = data.popup || {};
+        setv('adresse', data.adresse); setv('code_postal', data.code_postal); setv('ville', data.ville);
+        setv('telephone', data.telephone); setv('email', data.email);
+        setv('maps_query', data.maps_query || ((data.adresse || '') + (data.code_postal ? ', ' + data.code_postal : '') + (data.ville ? ' ' + data.ville : '')).trim());
+        setv('facebook', data.facebook); setv('instagram', data.instagram);
+        document.getElementById('p_actif').checked = !!p.actif;
+        setv('p_message', p.message);
+        setv('p_cta_label', p.cta_label); setv('p_cta_url', p.cta_url);
+        setv('p_delai', p.delai_secondes == null ? 5 : p.delai_secondes);
+        CMS.status('', '');
+      }).catch(function (e) { CMS.status('error', 'Erreur de chargement'); console.error(e); });
+    }
+
+    window.saveAll = function () {
+      var btn = document.getElementById('saveBtn'); btn.disabled = true;
+      data.adresse = v('adresse').trim();
+      data.code_postal = v('code_postal').trim();
+      data.ville = v('ville').trim();
+      data.telephone = v('telephone').trim();
+      data.telephone_raw = data.telephone.replace(/[^0-9+]/g, '');
+      data.email = v('email').trim();
+      data.maps_query = v('maps_query').trim();
+      data.facebook = v('facebook').trim();
+      data.instagram = v('instagram').trim();
+      data.popup = {
+        actif: document.getElementById('p_actif').checked,
+        message: v('p_message').trim(),
+        cta_label: v('p_cta_label').trim(),
+        cta_url: v('p_cta_url').trim(),
+        delai_secondes: parseInt(v('p_delai')) || 0
+      };
+      CMS.status('saving', 'Enregistrement…');
+      CMS.save(FILE, data, sha, 'Mise à jour infos & contact').then(function (newSha) {
+        sha = newSha; CMS.status('saved', 'Enregistré ✓');
+        setTimeout(function () { CMS.status('', ''); }, 3000);
+      }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); })
+        .finally(function () { btn.disabled = false; });
+    };
+  })();
+  </script>
+</body>
+</html>

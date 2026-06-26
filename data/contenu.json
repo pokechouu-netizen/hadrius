@@ -1,0 +1,17 @@
+{
+  "_commentaire": "Textes du site, modifiables depuis /admin → Textes.",
+  "textes": {
+    "hero_kicker": "Bienvenue à",
+    "hero_title": "Restaurant Hadrius",
+    "hero_sub": "Vaison-la-Romaine",
+    "intro": "Une table élégante au cœur de Vaison-la-Romaine. Une cuisine soignée, un service attentif, et une ambiance chaleureuse — à découvrir en salle ou en terrasse.",
+    "chips": [
+      "À la carte : 15–30 €",
+      "Menu enfant : 12 €",
+      "CB • Chèque • Espèces • Ticket Restaurant",
+      "Français • Anglais"
+    ],
+    "service": "Midi et soirs selon périodes",
+    "events_text": "Soirées à thème, concerts live, dégustations... Consultez nos événements et actualités directement sur notre page Facebook."
+  }
+}

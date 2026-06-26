@@ -1,0 +1,11 @@
+# Netlify
+.netlify
+
+# OS
+.DS_Store
+
+# Node
+node_modules
+
+# Claude Code (dev)
+.claude

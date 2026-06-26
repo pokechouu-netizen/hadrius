@@ -1,0 +1,23 @@
+type,section,nom,description,prix
+CARTE,ENTRÉES,Velouté du moment,,6 €
+CARTE,ENTRÉES,Cassolette d'escargots,,7 €
+CARTE,ENTRÉES,Camembert rôti,Au miel et herbes de Provence,8 €
+CARTE,ENTRÉES,Œuf cocotte,,8 €
+CARTE,ENTRÉES,Terrine de saumon,Et fromage frais,8 €
+CARTE,PLATS,Entrecôte,≈ 200 g,18 €
+CARTE,PLATS,Magret de canard entier,,18 €
+CARTE,PLATS,Poisson du moment,,18 €
+CARTE,PLATS,Blanquette de poulet,,18 €
+CARTE,PLATS,Sauce au choix,Poivre ou chasseur,2 €
+CARTE,DESSERTS,Assiette de fromage,,6 €
+CARTE,DESSERTS,Mousse au chocolat,,6 €
+CARTE,DESSERTS,Tiramisu,,6 €
+CARTE,DESSERTS,Tarte Bourdalou,,6 €
+CARTE,FORMULES,Formule complète,Entrée + Plat + Dessert,26 €
+CARTE,FORMULES,Menu enfant,Plat + Glace (jusqu'à 12 ans),12 €
+CARTE,INFOS,Accompagnement,"Frites fraîches, risotto, légumes poêlés",
+CARTE,INFOS,Paiement,"CB • Chèque • Espèces • TR",
+CARTE,INFOS,Services,Terrasse • Fait maison,
+HORAIRE,Du 01/01 au 30/04,Lundi au samedi,12h à 13h45,
+HORAIRE,Du 01/01 au 30/04,"Jeudi, vendredi et samedi",,19h00 à 21h30
+HORAIRE,Du 01/05 au 30/10,"Mardi, mercredi, jeudi, vendredi et samedi",12h à 13h45,19h à 21h

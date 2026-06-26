@@ -1,0 +1,39 @@
+{
+  "_commentaire": "Coordonnées, réseaux, plan, horaires saisonniers et popup. Modifiable depuis /admin → Horaires et /admin → Infos & contact. Laisser 'netlify_hook' vide (Git Gateway redéploie déjà).",
+  "adresse": "5 Rue Bernard Noël",
+  "code_postal": "84110",
+  "ville": "Vaison-la-Romaine",
+  "telephone": "04 90 41 75 12",
+  "telephone_raw": "+33490417512",
+  "email": "restaurant.hadrius@gmail.com",
+  "instagram": "https://www.instagram.com/restohadrius/",
+  "facebook": "https://www.facebook.com/profile.php?id=61576374483353",
+  "maps_query": "5 Rue Bernard Noël, 84110 Vaison-la-Romaine",
+  "horaires": {
+    "periodes": [
+      {
+        "id": "p1",
+        "label": "Du 01/01 au 30/04",
+        "lignes": [
+          { "id": "l1", "jours": "Lundi au samedi", "midi": "12h à 13h45", "soir": "" },
+          { "id": "l2", "jours": "Jeudi, vendredi et samedi", "midi": "", "soir": "19h00 à 21h30" }
+        ]
+      },
+      {
+        "id": "p2",
+        "label": "Du 01/05 au 30/10",
+        "lignes": [
+          { "id": "l3", "jours": "Mardi, mercredi, jeudi, vendredi et samedi", "midi": "12h à 13h45", "soir": "19h à 21h" }
+        ]
+      }
+    ]
+  },
+  "popup": {
+    "actif": false,
+    "message": "",
+    "cta_label": "Réserver une table",
+    "cta_url": "tel:+33490417512",
+    "delai_secondes": 5
+  },
+  "netlify_hook": ""
+}

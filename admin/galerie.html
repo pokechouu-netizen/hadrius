@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photos & galerie — Restaurant Hadrius</title>
+  <link rel="icon" href="../assets/logo-hadrius.jpg">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>.cat-badge{display:inline-block;font-size:.68rem;font-weight:700;padding:.12rem .5rem;border-radius:50px;background:rgba(201,168,76,.16);color:var(--gold-dark);margin-left:.4rem;text-transform:capitalize}</style>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <div class="brand">Restaurant Hadrius</div>
+    <h1>Photos &amp; galerie</h1>
+    <p>Connectez-vous pour gérer le logo, la devanture et les photos.</p>
+    <button class="btn-login" onclick="CMS.login()">Se connecter</button>
+  </div>
+
+  <div id="adminScreen">
+    <div class="topbar">
+      <h1>📷 Photos &amp; galerie</h1>
+      <span class="status" id="statusEl"></span>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Admin</a>
+      <a href="../index.html#photos" target="_blank" class="btn btn-ghost btn-sm">Voir le site ↗</a>
+      <button class="btn-text" onclick="CMS.logout()">Déconnexion</button>
+    </div>
+
+    <div class="panel active">
+      <div class="section-card">
+        <p class="section-card__title">🖼️ Logo &amp; photo de devanture</p>
+        <div class="photos-grid">
+          <div class="photo-slot">
+            <span class="photo-slot__label">Logo (en-tête)</span>
+            <div class="photo-slot__wrap">
+              <input type="file" accept="image/*" onchange="onSlot(this,'logo')">
+              <div class="photo-slot__empty" id="empty-logo">📷<span>Cliquer</span></div>
+              <img id="img-logo" style="display:none" alt="">
+            </div>
+          </div>
+          <div class="photo-slot">
+            <span class="photo-slot__label">Devanture (grande photo d'accueil)</span>
+            <div class="photo-slot__wrap">
+              <input type="file" accept="image/*" onchange="onSlot(this,'hero')">
+              <div class="photo-slot__empty" id="empty-hero">📷<span>Cliquer</span></div>
+              <img id="img-hero" style="display:none" alt="">
+            </div>
+          </div>
+        </div>
+        <p class="photo-slot__hint">Cliquez une image pour la remplacer. Enregistrement automatique.</p>
+      </div>
+
+      <div class="panel-header">
+        <h2>Photos de la galerie</h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal(-1)">+ Ajouter une photo</button>
+      </div>
+      <p class="panel-hint">Ces photos s'affichent dans la galerie, filtrées par catégorie (<strong>Plats</strong>, <strong>Ambiance</strong>, <strong>Terrasse</strong>). Décochez « Visible » pour masquer sans supprimer.</p>
+      <div class="card-list" id="list"><div class="loading">Chargement…</div></div>
+    </div>
+  </div>
+
+  <!-- Modal photo galerie -->
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2 id="modalTitle">Nouvelle photo</h2>
+      <div class="fg">
+        <label>Photo *</label>
+        <div class="photo-slot__wrap" style="max-width:260px">
+          <input type="file" accept="image/*" id="photoInput" onchange="onPhoto(this)">
+          <div class="photo-slot__empty" id="photoEmpty">📷<span>Cliquer pour ajouter</span></div>
+          <img id="photoImg" style="display:none" alt="">
+        </div>
+        <p class="photo-slot__hint" id="photoHint" style="text-align:left">JPG ou PNG.</p>
+      </div>
+      <div class="fg">
+        <label>Catégorie *</label>
+        <select id="f_cat">
+          <option value="plats">Plats</option>
+          <option value="ambiance">Ambiance</option>
+          <option value="terrasse">Terrasse</option>
+        </select>
+      </div>
+      <div class="fg"><label>Légende (optionnelle)</label><input type="text" id="f_legende" placeholder="Ex : Magret de canard"></div>
+      <div class="fg" style="flex-direction:row;align-items:center;gap:.5rem">
+        <input type="checkbox" id="f_visible" checked style="width:auto">
+        <label for="f_visible" style="text-transform:none;letter-spacing:0;font-size:.9rem;color:var(--ink)">Visible sur le site</label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveItem()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="cms.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var FILE = 'data/galerie.json';
+    var data = { logo: '', hero: '', photos: [] }, sha = '', edit = -1, pendingImg = null;
+
+    CMS.requireAuth(load);
+
+    function load() {
+      CMS.status('saving', 'Chargement…');
+      CMS.load(FILE).then(function (r) {
+        data = r.data; sha = r.sha;
+        if (!Array.isArray(data.photos)) data.photos = [];
+        setSlot('logo', data.logo); setSlot('hero', data.hero);
+        CMS.status('', ''); render();
+      }).catch(function (e) { CMS.status('error', 'Erreur de chargement'); console.error(e); });
+    }
+
+    function persist(msg) {
+      CMS.status('saving', 'Enregistrement…');
+      return CMS.save(FILE, data, sha, msg).then(function (newSha) {
+        sha = newSha; CMS.status('saved', 'Enregistré ✓');
+        setTimeout(function () { CMS.status('', ''); }, 3000);
+      }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); throw e; });
+    }
+
+    function setSlot(key, path) {
+      var img = document.getElementById('img-' + key), empty = document.getElementById('empty-' + key);
+      if (path) { img.src = CMS.imgSrc(path); img.style.display = 'block'; empty.style.display = 'none'; }
+      else { img.style.display = 'none'; empty.style.display = 'flex'; }
+    }
+
+    window.onSlot = function (input, key) {
+      if (!input.files || !input.files[0]) return;
+      CMS.status('saving', 'Téléversement…');
+      CMS.uploadImage(input.files[0]).then(function (path) {
+        data[key] = path; setSlot(key, path);
+        return persist('Mise à jour photo : ' + key);
+      }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); });
+    };
+
+    function render() {
+      var el = document.getElementById('list');
+      if (!data.photos.length) { el.innerHTML = '<div class="placeholder">Aucune photo. Cliquez « + Ajouter une photo ».</div>'; return; }
+      el.innerHTML = '';
+      data.photos.forEach(function (c, i) {
+        var d = document.createElement('div'); d.className = 'item-card';
+        var img = c.image ? '<img class="thumb" src="' + CMS.esc(CMS.imgSrc(c.image)) + '" alt="">' : '<div class="no-thumb">📷</div>';
+        d.innerHTML = img +
+          '<div class="item-card__body">' +
+            '<div class="item-card__title">' + (CMS.eh(c.legende) || '<em style="color:var(--muted)">Sans légende</em>') +
+              '<span class="cat-badge">' + CMS.eh(c.categorie) + '</span>' +
+              (c.visible === false ? '<span class="badge-hidden">Masqué</span>' : '') + '</div>' +
+          '</div>' +
+          '<div class="item-card__actions">' +
+            '<button class="btn btn-ghost btn-sm" onclick="move(' + i + ',-1)" ' + (i === 0 ? 'disabled' : '') + '>↑</button>' +
+            '<button class="btn btn-ghost btn-sm" onclick="move(' + i + ',1)" ' + (i === data.photos.length - 1 ? 'disabled' : '') + '>↓</button>' +
+            '<button class="btn btn-ghost btn-sm" onclick="openModal(' + i + ')">✏️</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="del(' + i + ')">🗑</button>' +
+          '</div>';
+        el.appendChild(d);
+      });
+    }
+
+    window.move = function (i, dir) {
+      var j = i + dir; if (j < 0 || j >= data.photos.length) return;
+      var t = data.photos[i]; data.photos[i] = data.photos[j]; data.photos[j] = t;
+      render(); persist('Réordonner la galerie');
+    };
+
+    window.openModal = function (i) {
+      edit = i; pendingImg = null;
+      var c = i === -1 ? {} : data.photos[i];
+      document.getElementById('modalTitle').textContent = i === -1 ? 'Nouvelle photo' : 'Modifier la photo';
+      document.getElementById('f_cat').value = c.categorie || 'plats';
+      document.getElementById('f_legende').value = c.legende || '';
+      document.getElementById('f_visible').checked = c.visible !== false;
+      setPhoto(c.image || '');
+      document.getElementById('photoHint').textContent = 'JPG ou PNG.';
+      document.getElementById('overlay').classList.add('open');
+    };
+    window.closeModal = function () { document.getElementById('overlay').classList.remove('open'); };
+
+    function setPhoto(path) {
+      var img = document.getElementById('photoImg'), empty = document.getElementById('photoEmpty');
+      if (path) { img.src = CMS.imgSrc(path); img.style.display = 'block'; empty.style.display = 'none'; }
+      else { img.style.display = 'none'; empty.style.display = 'flex'; }
+    }
+
+    window.onPhoto = function (input) {
+      if (!input.files || !input.files[0]) return;
+      var hint = document.getElementById('photoHint');
+      hint.textContent = 'Téléversement…';
+      CMS.uploadImage(input.files[0]).then(function (path) {
+        pendingImg = path; setPhoto(path); hint.textContent = 'Photo prête ✓ — cliquez « Enregistrer ».';
+      }).catch(function (e) { hint.textContent = 'Erreur de téléversement'; console.error(e); });
+    };
+
+    window.saveItem = function () {
+      var c = edit === -1 ? {} : data.photos[edit];
+      if (edit === -1 && !pendingImg) { alert('Ajoutez une photo.'); return; }
+      var btn = document.getElementById('saveBtn'); btn.disabled = true;
+      c.categorie = document.getElementById('f_cat').value;
+      c.legende = document.getElementById('f_legende').value.trim();
+      c.visible = document.getElementById('f_visible').checked;
+      if (pendingImg) c.image = pendingImg;
+      if (!c.id) c.id = 'g' + Date.now();
+      if (edit === -1) data.photos.push(c);
+      persist((edit === -1 ? 'Ajout photo galerie' : 'Modif photo galerie'))
+        .then(function () { closeModal(); render(); })
+        .finally(function () { btn.disabled = false; });
+    };
+
+    window.del = function (i) {
+      if (!confirm('Supprimer cette photo ?')) return;
+      data.photos.splice(i, 1); render(); persist('Suppression photo galerie');
+    };
+
+    document.getElementById('overlay').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+  })();
+  </script>
+</body>
+</html>

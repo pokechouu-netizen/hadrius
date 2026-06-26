@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#050506" />
+  <title>Restaurant Hadrius — Vaison-la-Romaine</title>
+  <meta name="description" content="Restaurant Hadrius à Vaison-la-Romaine. À la carte, terrasse, paiement CB/chèque/espèces/ticket restaurant. Réservation par téléphone." />
+  <link rel="icon" href="assets/logo-hadrius.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    /* Mobile fix topbar */
+    .desktop-only { display: inline-flex; }
+    .mobile-only { display: none; }
+
+    @media (max-width: 720px){
+      .desktop-only { display: none !important; }
+      .mobile-only { display: inline-flex !important; }
+      .topbar .nav{ gap: 10px; }
+      .topbar .brand img{ max-height: 34px; width: auto; height: auto; }
+      .topbar .nav-right{ display: flex; align-items: center; gap: 10px; }
+      .topbar .pill .small{ display:none; }
+      .topbar .pill{ padding: 10px 12px; }
+      .mobile-header-cta{ padding: 8px 14px; font-size: 13px; gap: 6px; border-radius: 50px; }
+      .topbar .nav{ position: relative; }
+      .topbar .brand{ position: absolute; left: 50%; transform: translateX(-50%); }
+      .topbar .nav-left, .topbar .nav-right{ flex: 1; }
+      .topbar .nav-right{ justify-content: flex-end; }
+    }
+
+    /* Mobile menu */
+    .mobile-menu{ position: fixed; inset: 0; z-index: 9999; display: none; }
+    .mobile-menu.is-open{ display:block; }
+    .mobile-menu__backdrop{ position:absolute; inset:0; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); }
+    .mobile-menu__panel{
+      position:absolute; left: 14px; right: 14px; top: 16px;
+      max-width: 520px; margin: 0 auto; padding: 20px; z-index: 1;
+    }
+    .mobile-menu__top{ display:flex; align-items:center; justify-content:space-between; gap: 14px; margin-bottom: 16px; }
+    .mobile-menu__title{ font-weight: 700; font-size: 16px; letter-spacing: .2px; }
+    .mobile-menu__actions{ display:grid; grid-template-columns: 1fr; gap: 10px; }
+
+    /* Phone modal */
+    #phoneModal{ position:fixed; inset:0; z-index:10000; display:none; align-items:center; justify-content:center; }
+    #phoneModal.is-open{ display:flex; }
+    .phone-modal__backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.6); backdrop-filter:blur(8px); }
+    .phone-modal__box{
+      position:relative; z-index:1; text-align:center; padding:36px 32px 28px;
+      width:min(400px, calc(100% - 32px)); border-radius:20px;
+    }
+    .phone-modal__number{
+      font-size:clamp(28px, 6vw, 38px); font-weight:800; letter-spacing:1px;
+      color:var(--gold1) !important; margin-bottom:24px;
+    }
+    .phone-modal__actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .phone-modal__btn{ display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:600; cursor:pointer; }
+    a.cta.phone-modal__btn,
+    a.cta.phone-modal__btn:visited,
+    a.cta.phone-modal__btn:hover,
+    a.cta.phone-modal__btn:active{ color:#0b0a0d !important; text-decoration:none; }
+    .phone-modal__close{
+      position:absolute; top:12px; right:16px; background:none; border:none;
+      color:var(--muted); font-size:20px; cursor:pointer; padding:4px 8px;
+    }
+    .phone-modal__close:hover{ color:var(--text); }
+  </style>
+
+</head>
+<body>
+  <div class="bg-scene">
+    <div class="bg-image"></div>
+    <div class="birds-layer" aria-hidden="true"></div>
+  </div>
+
+  <canvas id="bg-canvas"></canvas>
+  <div class="noise"></div>
+
+    <header class="topbar">
+    <div class="container">
+      <div class="nav">
+        <div class="nav-left">
+          <a class="cta desktop-only" id="ctaContact" href="javascript:void(0)">Nous contacter</a>
+        </div>
+
+        <div class="brand" aria-label="Restaurant Hadrius">
+          <img src="assets/logo-hadrius.jpg" alt="Logo Restaurant Hadrius" />
+        </div>
+
+        <div class="nav-right">
+          <div class="social-links desktop-only">
+            <a class="pill" href="https://www.facebook.com/p/Restaurant-Hadrius-61576374483353/" target="_blank" rel="noopener" aria-label="Facebook">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.6 1.6-1.6H16.7V4.9c-.3 0-1.4-.1-2.7-.1-2.7 0-4.5 1.7-4.5 4.7V11H7v3h2.5v8h4z"/></svg>
+              <span class="small">Facebook</span>
+            </a>
+
+            <a class="pill" href="https://www.instagram.com/restohadrius/" target="_blank" rel="noopener" aria-label="Instagram">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4A5.8 5.8 0 0 1 16.2 22H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4A3.8 3.8 0 0 0 20 16.2V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm10.2 1.6a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 0 1 0-2.4ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
+              <span class="small">Instagram</span>
+            </a>
+          </div>
+
+          <button class="toggle" id="themeToggle" aria-label="Mode jour/nuit"><span class="dot"></span></button>
+
+          <button class="pill mobile-only" id="menuBtn" type="button" aria-label="Ouvrir le menu">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true" style="fill:#f7d27a"><path d="M4 7h16v2H4V7Zm0 6h16v2H4v-2Zm0 6h16v2H4v-2Z"/></svg>
+            <span class="small">Menu</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Menu mobile -->
+  <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+    <div class="mobile-menu__panel card">
+      <div class="mobile-menu__top">
+        <div class="mobile-menu__title">Menu</div>
+        <button class="pill" id="menuClose" type="button" aria-label="Fermer le menu">✕</button>
+      </div>
+
+      <div class="mobile-menu__actions">
+        <a class="cta" href="javascript:void(0)" id="ctaContactMobile">Nous contacter</a>
+        <a class="pill" href="https://www.facebook.com/p/Restaurant-Hadrius-61576374483353/" target="_blank" rel="noopener">Facebook</a>
+        <a class="pill" href="https://www.instagram.com/restohadrius/" target="_blank" rel="noopener">Instagram</a>
+        <a class="pill" href="#menu" id="goMenu">Horaires & tarifs</a>
+        <a class="pill" href="#acces" id="goAccess">Accès</a>
+      </div>
+    </div>
+    <div class="mobile-menu__backdrop" id="menuBackdrop" aria-hidden="true"></div>
+  </div>
+
+  <main>
+    <section class="hero-banner">
+      <div class="hero-banner__img">
+        <img src="assets/devanture.jpg" alt="Devanture du Restaurant Hadrius à Vaison-la-Romaine" />
+      </div>
+      <div class="hero-banner__overlay"></div>
+      <div class="hero-banner__content">
+        <div class="hero-banner__box">
+          <div class="hero-banner__ornament" aria-hidden="true">
+            <span class="hero-banner__line"></span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 6z"/></svg>
+            <span class="hero-banner__line"></span>
+          </div>
+          <span class="hero-banner__kicker" data-text="hero_kicker">Bienvenue à</span>
+          <h1 class="hero-banner__title" data-text="hero_title">Restaurant Hadrius</h1>
+          <div class="hero-banner__ornament hero-banner__ornament--wide" aria-hidden="true">
+            <span class="hero-banner__line"></span>
+            <span class="hero-banner__diamond"></span>
+            <span class="hero-banner__line"></span>
+          </div>
+          <p class="hero-banner__sub" data-text="hero_sub">Vaison-la-Romaine</p>
+          <button type="button" class="cta hero-banner__cta open-phone-modal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.46.57 3.58a1 1 0 0 1-.25 1.01l-2.2 2.2z"/></svg>
+            Réserver une table
+          </button>
+        </div>
+        <a class="pill hero-banner__scroll" href="#infos">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 16.5l-6-6 1.4-1.4L12 13.7l4.6-4.6L18 10.5z"/></svg>
+          Découvrir
+        </a>
+      </div>
+    </section>
+
+    <section class="hero" id="infos">
+      <div class="container">
+        <div class="hero-grid">
+          <div class="card hero-main">
+            <div class="bgimg" aria-hidden="true"></div>
+            <div class="content">
+              <div class="kicker">Vaison-la-Romaine • Terrasse • À la carte</div>
+              <h2 class="h1">Restaurant Hadrius</h2>
+              <p class="sub" data-text="intro">
+                Une table élégante au cœur de Vaison-la-Romaine. Une cuisine soignée, un service attentif,
+                et une ambiance chaleureuse — à découvrir en salle ou en terrasse.
+              </p>
+
+              <div class="hero-actions">
+                <a class="pill" href="#menu">Horaires & tarifs</a>
+                <a class="pill" href="#acces">Accès</a>
+              </div>
+
+              <div class="chips" data-chips>
+                <div class="chip">À la carte : 15–30 €</div>
+                <div class="chip">Menu enfant : 12 €</div>
+                <div class="chip">CB • Chèque • Espèces • Ticket Restaurant</div>
+                <div class="chip">Français • Anglais</div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="card hero-side">
+            <div class="side-title">Infos pratiques</div>
+            <div class="side-grid">
+              <div class="side-item">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5.3-7 13-7 13S5 14.3 5 9a7 7 0 0 1 7-7Zm0 9.5A2.5 2.5 0 1 0 12 6.5a2.5 2.5 0 0 0 0 5Z"/></svg>
+                <div><strong>Adresse</strong><span data-info="address">5 Rue Bernard Noël, 84110 Vaison-la-Romaine</span></div>
+              </div>
+
+              <div class="side-item">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8c1.5 2.9 3.7 5.1 6.6 6.6l2.2-2.2c.3-.3.8-.4 1.2-.2 1.3.5 2.7.8 4.1.8.7 0 1.3.6 1.3 1.3V21c0 .7-.6 1.3-1.3 1.3C10.1 22.3 1.7 13.9 1.7 3.3 1.7 2.6 2.3 2 3 2h3.6c.7 0 1.3.6 1.3 1.3 0 1.4.3 2.8.8 4.1.1.4 0 .9-.2 1.2l-2.9 2.2Z"/></svg>
+                <div><strong>Téléphone</strong><span data-info="phone">04 90 41 75 12</span></div>
+              </div>
+
+              <div class="side-item">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5L4 8V6l8 5 8-5v2Z"/></svg>
+                <div><strong>Email</strong><span data-info="email">restaurant.hadrius@gmail.com</span></div>
+              </div>
+
+              <div class="side-item">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a11 11 0 1 0 11 11A11 11 0 0 0 12 1Zm1 11.4 3.8 2.2-.8 1.3-4.6-2.7V6h1.6Z"/></svg>
+                <div><strong>Service</strong><span data-text="service">Midi et soirs selon périodes</span></div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="menu">
+      <div class="container">
+        <div class="card info-box carte-card carte-card--full" id="carte-box">
+            <div class="carte-header">
+              <span class="carte-kicker">Restaurant Hadrius</span>
+              <h2 class="h2">Carte de Saison</h2>
+              <div class="carte-ornament">
+                <span class="carte-ornament-line"></span>
+                <svg class="carte-ornament-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 6z"/></svg>
+                <span class="carte-ornament-line"></span>
+              </div>
+            </div>
+
+            <div class="carte-menu" id="carteMenu">
+              <p class="carte-menu__fallback">Découvrez notre carte ci-dessous.</p>
+            </div>
+
+            <div class="carte-pdf-actions">
+              <a class="carte-iframe-open" id="cartePdfLink" href="carte.pdf" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7zM19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7z"/></svg>
+                <span>Ouvrir la carte en PDF</span>
+              </a>
+            </div>
+        </div>
+      </div>
+    </section>
+
+        <section class="section" id="photos">
+      <div class="container">
+        <div class="gallery-header">
+          <h2 class="h2">Galerie photo</h2>
+          <div class="gallery-filters">
+            <button class="filter-btn is-active" data-filter="plats">Plats</button>
+            <button class="filter-btn" data-filter="ambiance">Ambiance</button>
+            <button class="filter-btn" data-filter="terrasse">Terrasse</button>
+          </div>
+        </div>
+
+        <div class="gallery-carousel-wrap">
+          <div class="gallery-carousel" id="galleryCarousel" aria-label="Galerie photos du restaurant">
+            <div class="gallery-carousel-viewport">
+              <div class="gallery-carousel-track"><!-- Rempli dynamiquement depuis le Google Sheet PHOTOS --></div>
+            </div>
+
+            <button class="gal-car-btn gal-car-prev" type="button" aria-label="Photos précédentes">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 19.4 8 12l7.4-7.4 1.4 1.4L10.8 12l6 6-1.4 1.4Z"/></svg>
+            </button>
+            <button class="gal-car-btn gal-car-next" type="button" aria-label="Photos suivantes">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 4.6 16 12l-7.4 7.4-1.4-1.4 6-6-6-6 1.4-1.4Z"/></svg>
+            </button>
+
+            <div class="gal-car-counter">
+              <span class="gal-car-current">1</span> / <span class="gal-car-total">13</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section" id="evenements">
+      <div class="container">
+        <div class="events-layout">
+          <!-- Texte + CTA -->
+          <div class="events-panel card">
+            <div class="events-glow" aria-hidden="true"></div>
+            <div class="events-content">
+              <div class="events-header">
+                <svg class="events-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5zm2 4h10v2H7v-2zm0 4h7v2H7v-2z"/>
+                </svg>
+                <div>
+                  <div class="kicker">Soirées • Concerts • Actualités</div>
+                  <h2 class="h2">Événements</h2>
+                </div>
+              </div>
+              <p class="events-text" data-text="events_text">Soirées à thème, concerts live, dégustations... Consultez nos événements et actualités directement sur notre page Facebook.</p>
+              <a class="cta events-cta" href="https://www.facebook.com/profile.php?id=61576374483353" target="_blank" rel="noopener">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8h2.7l.4-3h-3.1V9.1c0-.9.3-1.6 1.6-1.6H16.7V4.9c-.3 0-1.4-.1-2.7-.1-2.7 0-4.5 1.7-4.5 4.7V11H7v3h2.5v8h4z"/></svg>
+                Voir la page Facebook
+              </a>
+            </div>
+          </div>
+
+          <!-- Widget Facebook Page (iframe direct) -->
+          <div class="card fb-widget-card">
+            <div class="fb-widget-wrap">
+              <iframe
+                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D61576374483353&tabs=timeline&width=400&height=520&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true"
+                class="fb-widget-iframe"
+                title="Page Facebook Restaurant Hadrius"
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lightbox Premium -->
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <div class="lightbox-backdrop"></div>
+      <div class="lightbox-content">
+        <button class="lightbox-close" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+
+        <button class="lightbox-nav lightbox-prev" aria-label="Photo précédente">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 19.4 8 12l7.4-7.4 1.4 1.4L10.8 12l6 6-1.4 1.4Z"/></svg>
+        </button>
+
+        <button class="lightbox-nav lightbox-next" aria-label="Photo suivante">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 4.6 16 12l-7.4 7.4-1.4-1.4 6-6-6-6 1.4-1.4Z"/></svg>
+        </button>
+
+        <div class="lightbox-image-wrap">
+          <img class="lightbox-image" src="" alt="">
+        </div>
+
+        <div class="lightbox-controls">
+          <button class="lightbox-zoom" aria-label="Zoom">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </button>
+          <div class="lightbox-counter">
+            <span class="lightbox-current">1</span> / <span class="lightbox-total">13</span>
+          </div>
+          <button class="lightbox-play" aria-label="Lecture automatique">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+<section class="section" id="acces">
+      <div class="container">
+        <h2 class="h2">Accès</h2>
+
+        <div class="card horaires-box" id="horairesBox">
+          <div class="horaires-header">
+            <svg class="icon horaires-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a11 11 0 1 0 11 11A11 11 0 0 0 12 1Zm1 11.4 3.8 2.2-.8 1.3-4.6-2.7V6h1.6Z"/></svg>
+            <div>
+              <span class="kicker">Restaurant Hadrius</span>
+              <h3 class="horaires-title">Horaires d'ouverture</h3>
+            </div>
+          </div>
+          <div class="horaires-list" id="horairesList">
+            <div class="horaires-loading">Chargement des horaires…</div>
+          </div>
+        </div>
+
+        <div class="mapwrap">
+          <!-- Iframe Google Maps (chargée directement) -->
+          <iframe id="mapIframe" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=5%20Rue%20Bernard%20No%C3%ABl%2C%2084110%20Vaison-la-Romaine&output=embed"
+            style="display:block;"></iframe>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" style="text-align:center;padding:32px 16px 20px;font-size:13px;">
+    <div class="container">
+      <p style="margin:0 0 8px;">© <span id="year"></span> Restaurant Hadrius — Vaison-la-Romaine</p>
+      <p style="margin:0 0 12px;color:var(--muted);font-size:12px;">
+        <a href="tel:+33490417512" data-info="phone">04 90 41 75 12</a> · <a href="mailto:restaurant.hadrius@gmail.com" data-info-mail>restaurant.hadrius@gmail.com</a>
+      </p>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);">
+        <a href="mentions-legales.html">Mentions légales</a>
+        <a href="politique-confidentialite.html">Confidentialité</a>
+        <a href="politique-cookies.html">Cookies</a>
+        <a href="cgu.html">CGU</a>
+        <a href="#" id="openCookieSettings">Gérer mes cookies</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  
+  <script>
+    (function(){
+      const menu = document.getElementById('mobileMenu');
+      const btn = document.getElementById('menuBtn');
+      const closeBtn = document.getElementById('menuClose');
+      const backdrop = document.getElementById('menuBackdrop');
+      const ctaDesktop = document.getElementById('ctaContact');
+      const ctaMobile = document.getElementById('ctaContactMobile');
+
+      function openMenu(){
+        if(!menu) return;
+        menu.classList.add('is-open');
+        menu.setAttribute('aria-hidden','false');
+        document.body.style.overflow = 'hidden';
+      }
+      function closeMenu(){
+        if(!menu) return;
+        menu.classList.remove('is-open');
+        menu.setAttribute('aria-hidden','true');
+        document.body.style.overflow = '';
+      }
+
+      btn && btn.addEventListener('click', openMenu);
+      closeBtn && closeBtn.addEventListener('click', closeMenu);
+      backdrop && backdrop.addEventListener('click', closeMenu);
+
+      ctaMobile && ctaMobile.addEventListener('click', function(){
+        closeMenu();
+        const pm = document.getElementById('phoneModal');
+        if(pm) { pm.classList.add('is-open'); document.body.style.overflow = 'hidden'; }
+      });
+
+      ['goMenu','goAccess'].forEach(id=>{
+        const el = document.getElementById(id);
+        el && el.addEventListener('click', closeMenu);
+      });
+
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape') closeMenu();
+      });
+    })();
+  </script>
+
+  <script src="script.js" defer></script>
+
+  <!-- Netlify Identity : capte le lien d'invitation (#invite_token=…) et redirige vers /admin à la connexion -->
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    if (window.netlifyIdentity) {
+      netlifyIdentity.on('init', function (user) {
+        if (!user) {
+          netlifyIdentity.on('login', function () { document.location.href = '/admin/'; });
+        }
+      });
+    }
+  </script>
+</body>
+</html>

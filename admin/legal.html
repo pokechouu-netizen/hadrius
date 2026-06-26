@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pages légales — Restaurant Hadrius</title>
+  <link rel="icon" href="../assets/logo-hadrius.jpg">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    .legal-editor { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 820px) { .legal-editor { grid-template-columns: 1fr; } }
+    .legal-editor textarea { width: 100%; min-height: 460px; font-family: ui-monospace, Menlo, monospace; font-size: .82rem; line-height: 1.5; padding: .8rem; border: 1.5px solid var(--border); border-radius: 8px; outline: none; }
+    .legal-editor textarea:focus { border-color: var(--gold); }
+    .preview { background: #fff; border: 1.5px solid var(--border); border-radius: 8px; padding: 1.2rem; overflow-y: auto; max-height: 560px; }
+    .preview h1 { font-size: 1.4rem; margin-bottom: .8rem; }
+    .preview h2, .preview h3 { font-size: 1.05rem; margin: 1rem 0 .4rem; color: var(--gold-dark); }
+    .preview p, .preview li { font-size: .85rem; line-height: 1.6; margin-bottom: .5rem; }
+    .preview ul { padding-left: 1.2rem; }
+    .editor-label { font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: .35rem; display: block; }
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <div class="brand">Restaurant Hadrius</div>
+    <h1>Pages légales</h1>
+    <p>Connectez-vous pour modifier les pages légales.</p>
+    <button class="btn-login" onclick="CMS.login()">Se connecter</button>
+  </div>
+
+  <div id="adminScreen">
+    <div class="topbar">
+      <h1>📄 Pages légales</h1>
+      <span class="status" id="statusEl"></span>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Admin</a>
+      <button class="btn-text" onclick="CMS.logout()">Déconnexion</button>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs">
+        <button class="tab active" data-tab="ml" onclick="switchTab('ml',this)">Mentions légales</button>
+        <button class="tab" data-tab="pc" onclick="switchTab('pc',this)">Confidentialité</button>
+        <button class="tab" data-tab="ck" onclick="switchTab('ck',this)">Cookies</button>
+        <button class="tab" data-tab="cg" onclick="switchTab('cg',this)">CGU</button>
+      </div>
+    </div>
+
+    <div class="panel active" id="panel-ml"></div>
+    <div class="panel" id="panel-pc"></div>
+    <div class="panel" id="panel-ck"></div>
+    <div class="panel" id="panel-cg"></div>
+  </div>
+
+  <script src="cms.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var FILE = 'data/mentions.json';
+    var data = {}, sha = '';
+    var MAP = { ml: 'mentions_legales', pc: 'politique_confidentialite', ck: 'politique_cookies', cg: 'cgu' };
+    var LABEL = { ml: 'mentions légales', pc: 'politique de confidentialité', ck: 'politique de cookies', cg: 'CGU' };
+
+    function panelHTML(id) {
+      return '<p class="panel-hint">Modifiez le contenu HTML de la page <strong>' + LABEL[id] +
+        '</strong>. Balises simples : <code>&lt;h2&gt;</code>, <code>&lt;h3&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;ul&gt;&lt;li&gt;</code>, <code>&lt;br&gt;</code>, <code>&lt;a href&gt;</code>. L\'aperçu se met à jour en direct.</p>' +
+        '<div class="legal-editor"><div><span class="editor-label">Contenu (HTML)</span>' +
+        '<textarea id="ed-' + id + '" oninput="updatePreview(\'' + id + '\')"></textarea></div>' +
+        '<div><span class="editor-label">Aperçu</span><div class="preview" id="pv-' + id + '"></div></div></div>' +
+        '<div class="form-save-row"><button class="btn btn-primary" id="save-' + id + '" onclick="save(\'' + id + '\')">Enregistrer (' + LABEL[id] + ')</button></div>';
+    }
+
+    Object.keys(MAP).forEach(function (id) { document.getElementById('panel-' + id).innerHTML = panelHTML(id); });
+
+    CMS.requireAuth(load);
+
+    function load() {
+      CMS.status('saving', 'Chargement…');
+      CMS.load(FILE).then(function (r) {
+        data = r.data; sha = r.sha;
+        Object.keys(MAP).forEach(function (id) {
+          data[MAP[id]] = data[MAP[id]] || { html: '' };
+          document.getElementById('ed-' + id).value = data[MAP[id]].html || '';
+          updatePreview(id);
+        });
+        CMS.status('', '');
+      }).catch(function (e) { CMS.status('error', 'Erreur de chargement'); console.error(e); });
+    }
+
+    window.switchTab = function (id, btn) {
+      document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+      document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+      document.getElementById('panel-' + id).classList.add('active');
+      btn.classList.add('active');
+    };
+
+    window.updatePreview = function (id) {
+      document.getElementById('pv-' + id).innerHTML = document.getElementById('ed-' + id).value;
+    };
+
+    window.save = function (id) {
+      var btn = document.getElementById('save-' + id); btn.disabled = true;
+      data[MAP[id]] = { html: document.getElementById('ed-' + id).value };
+      CMS.status('saving', 'Enregistrement…');
+      CMS.save(FILE, data, sha, 'Mise à jour ' + LABEL[id]).then(function (newSha) {
+        sha = newSha; CMS.status('saved', 'Enregistré ✓');
+        setTimeout(function () { CMS.status('', ''); }, 3000);
+      }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); })
+        .finally(function () { btn.disabled = false; });
+    };
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Horaires — Restaurant Hadrius</title>
+  <link rel="icon" href="../assets/logo-hadrius.jpg">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    .per-head { display:flex; align-items:center; gap:.6rem; justify-content:space-between; margin-bottom:.7rem; }
+    .per-head input { font-weight:700; max-width:300px; }
+    .ligne { display:grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap:.5rem; align-items:end; padding:.5rem 0; border-top:1px solid var(--border); }
+    .ligne .fg { margin-bottom:0; }
+    @media (max-width:640px){ .ligne { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <div class="brand">Restaurant Hadrius</div>
+    <h1>Horaires d'ouverture</h1>
+    <p>Connectez-vous pour modifier les horaires.</p>
+    <button class="btn-login" onclick="CMS.login()">Se connecter</button>
+  </div>
+
+  <div id="adminScreen">
+    <div class="topbar">
+      <h1>🕒 Horaires d'ouverture</h1>
+      <span class="status" id="statusEl"></span>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Admin</a>
+      <a href="../index.html#acces" target="_blank" class="btn btn-ghost btn-sm">Voir le site ↗</a>
+      <button class="btn-text" onclick="CMS.logout()">Déconnexion</button>
+    </div>
+
+    <div class="panel active">
+      <p class="panel-hint">Les horaires sont organisés par <strong>périodes</strong> (saisons). Chaque période contient des lignes : un libellé de jours, et les créneaux <strong>Midi</strong> et/ou <strong>Soir</strong>. Laissez un créneau vide s'il n'y a pas de service. Cliquez <strong>Enregistrer</strong> en bas après vos modifications.</p>
+      <div id="periodes"><div class="loading">Chargement…</div></div>
+      <div style="margin:1rem 0">
+        <button class="btn btn-ghost btn-sm" onclick="addPeriode()">+ Ajouter une période</button>
+      </div>
+      <div class="form-save-row">
+        <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">Enregistrer les horaires</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="cms.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var FILE = 'data/infos.json';
+    var data = {}, sha = '', periodes = [];
+
+    CMS.requireAuth(load);
+
+    function load() {
+      CMS.status('saving', 'Chargement…');
+      CMS.load(FILE).then(function (r) {
+        data = r.data; sha = r.sha;
+        periodes = (data.horaires && Array.isArray(data.horaires.periodes)) ? data.horaires.periodes : [];
+        CMS.status('', ''); render();
+      }).catch(function (e) { CMS.status('error', 'Erreur de chargement'); console.error(e); });
+    }
+
+    // Lit les champs du DOM vers le tableau `periodes` (pour ne rien perdre avant un re-render)
+    function syncFromDOM() {
+      document.querySelectorAll('[data-per]').forEach(function (pEl) {
+        var pi = +pEl.getAttribute('data-per');
+        if (!periodes[pi]) return;
+        periodes[pi].label = pEl.querySelector('.per-label').value.trim();
+        var lignes = [];
+        pEl.querySelectorAll('[data-lig]').forEach(function (lEl) {
+          lignes.push({
+            id: lEl.getAttribute('data-id') || ('l' + Date.now() + Math.floor(Math.random() * 1000)),
+            jours: lEl.querySelector('.l-jours').value.trim(),
+            midi: lEl.querySelector('.l-midi').value.trim(),
+            soir: lEl.querySelector('.l-soir').value.trim()
+          });
+        });
+        periodes[pi].lignes = lignes;
+      });
+    }
+
+    function render() {
+      var root = document.getElementById('periodes');
+      if (!periodes.length) { root.innerHTML = '<div class="placeholder">Aucune période. Cliquez « + Ajouter une période ».</div>'; return; }
+      root.innerHTML = '';
+      periodes.forEach(function (p, pi) {
+        var card = document.createElement('div'); card.className = 'section-card'; card.setAttribute('data-per', pi);
+        var lignes = (p.lignes || []).map(function (l, li) {
+          return '<div class="ligne" data-lig="' + li + '" data-id="' + CMS.esc(l.id || '') + '">' +
+            '<div class="fg"><label>Jours</label><input class="l-jours" type="text" value="' + CMS.esc(l.jours) + '" placeholder="Lundi au samedi"></div>' +
+            '<div class="fg"><label>Midi</label><input class="l-midi" type="text" value="' + CMS.esc(l.midi) + '" placeholder="12h à 13h45"></div>' +
+            '<div class="fg"><label>Soir</label><input class="l-soir" type="text" value="' + CMS.esc(l.soir) + '" placeholder="19h à 21h"></div>' +
+            '<button class="btn btn-danger btn-sm" onclick="delLigne(' + pi + ',' + li + ')">🗑</button>' +
+          '</div>';
+        }).join('');
+        card.innerHTML =
+          '<div class="per-head">' +
+            '<input class="per-label" type="text" value="' + CMS.esc(p.label) + '" placeholder="Du 01/05 au 30/10">' +
+            '<div style="display:flex;gap:.3rem">' +
+              '<button class="btn btn-ghost btn-sm" onclick="movePeriode(' + pi + ',-1)" ' + (pi === 0 ? 'disabled' : '') + '>↑</button>' +
+              '<button class="btn btn-ghost btn-sm" onclick="movePeriode(' + pi + ',1)" ' + (pi === periodes.length - 1 ? 'disabled' : '') + '>↓</button>' +
+              '<button class="btn btn-danger btn-sm" onclick="delPeriode(' + pi + ')">Supprimer</button>' +
+            '</div>' +
+          '</div>' + lignes +
+          '<div style="margin-top:.7rem"><button class="btn btn-primary btn-sm" onclick="addLigne(' + pi + ')">+ Ajouter une ligne</button></div>';
+        root.appendChild(card);
+      });
+    }
+
+    window.addPeriode = function () { syncFromDOM(); periodes.push({ id: 'p' + Date.now(), label: 'Nouvelle période', lignes: [] }); render(); };
+    window.delPeriode = function (pi) { if (!confirm('Supprimer cette période ?')) return; syncFromDOM(); periodes.splice(pi, 1); render(); };
+    window.movePeriode = function (pi, dir) { var j = pi + dir; if (j < 0 || j >= periodes.length) return; syncFromDOM(); var t = periodes[pi]; periodes[pi] = periodes[j]; periodes[j] = t; render(); };
+    window.addLigne = function (pi) { syncFromDOM(); if (!periodes[pi].lignes) periodes[pi].lignes = []; periodes[pi].lignes.push({ id: 'l' + Date.now(), jours: '', midi: '', soir: '' }); render(); };
+    window.delLigne = function (pi, li) { syncFromDOM(); periodes[pi].lignes.splice(li, 1); render(); };
+
+    window.saveAll = function () {
+      syncFromDOM();
+      var btn = document.getElementById('saveBtn'); btn.disabled = true;
+      data.horaires = { periodes: periodes };
+      CMS.status('saving', 'Enregistrement…');
+      CMS.save(FILE, data, sha, 'Mise à jour des horaires').then(function (newSha) {
+        sha = newSha; CMS.status('saved', 'Enregistré ✓');
+        setTimeout(function () { CMS.status('', ''); }, 3000);
+      }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); })
+        .finally(function () { btn.disabled = false; });
+    };
+  })();
+  </script>
+</body>
+</html>

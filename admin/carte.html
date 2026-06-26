@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carte — Restaurant Hadrius</title>
+  <link rel="icon" href="../assets/logo-hadrius.jpg">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <style>
+    .sec-head { display:flex; align-items:center; gap:.6rem; justify-content:space-between; margin-bottom:.9rem; }
+    .sec-head input { font-size:1rem; font-weight:700; max-width:280px; }
+    .item-row { display:flex; gap:.6rem; align-items:flex-start; padding:.6rem 0; border-top:1px solid var(--border); }
+    .item-row__body { flex:1; min-width:0; }
+    .item-row__nom { font-weight:600; font-size:.92rem; }
+    .item-row__desc { font-size:.8rem; color:var(--muted); }
+    .item-row__prix { font-weight:700; color:var(--gold-dark); white-space:nowrap; }
+    .item-row__actions { display:flex; gap:.3rem; flex-shrink:0; }
+    .pdf-current { font-size:.85rem; color:var(--muted); margin-bottom:.5rem; }
+  </style>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <div class="brand">Restaurant Hadrius</div>
+    <h1>Carte du restaurant</h1>
+    <p>Connectez-vous pour modifier la carte et le PDF.</p>
+    <button class="btn-login" onclick="CMS.login()">Se connecter</button>
+  </div>
+
+  <div id="adminScreen">
+    <div class="topbar">
+      <h1>🍽️ Carte du restaurant</h1>
+      <span class="status" id="statusEl"></span>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Admin</a>
+      <a href="../index.html#menu" target="_blank" class="btn btn-ghost btn-sm">Voir le site ↗</a>
+      <button class="btn-text" onclick="CMS.logout()">Déconnexion</button>
+    </div>
+
+    <div class="panel active">
+      <div class="section-card">
+        <p class="section-card__title">📄 PDF de la carte</p>
+        <p class="panel-hint">Le bouton « Ouvrir la carte en PDF » du site pointe vers ce fichier. Téléversez un nouveau PDF pour le remplacer.</p>
+        <p class="pdf-current" id="pdfCurrent">—</p>
+        <input type="file" accept="application/pdf" id="pdfInput" onchange="onPdf(this)">
+        <p class="panel-hint" id="pdfHint" style="margin-top:.4rem"></p>
+      </div>
+
+      <div class="panel-header">
+        <h2>Sections &amp; plats</h2>
+        <button class="btn btn-primary btn-sm" onclick="addSection()">+ Ajouter une section</button>
+      </div>
+      <p class="panel-hint">Chaque section (Entrées, Plats…) contient des plats avec un nom, une description (optionnelle) et un prix. Laissez le prix vide pour une simple information.</p>
+      <div id="sections"><div class="loading">Chargement…</div></div>
+    </div>
+  </div>
+
+  <!-- Modal plat -->
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <h2 id="modalTitle">Nouveau plat</h2>
+      <div class="fg"><label>Nom du plat *</label><input type="text" id="f_nom" placeholder="Ex : Magret de canard entier"></div>
+      <div class="fg"><label>Description (optionnelle)</label><input type="text" id="f_desc" placeholder="Ex : ≈ 200 g"></div>
+      <div class="fg"><label>Prix</label><input type="text" id="f_prix" placeholder="Ex : 18 €"><span class="hint">Laisser vide pour une ligne d'information sans prix.</span></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-primary" id="saveBtn" onclick="saveItem()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="cms.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var FILE = 'data/carte.json';
+    var data = { pdf: '', sections: [] }, sha = '', curSec = -1, curItem = -1;
+
+    CMS.requireAuth(load);
+
+    function load() {
+      CMS.status('saving', 'Chargement…');
+      CMS.load(FILE).then(function (r) {
+        data = r.data; sha = r.sha;
+        if (!Array.isArray(data.sections)) data.sections = [];
+        document.getElementById('pdfCurrent').textContent = data.pdf ? ('Fichier actuel : ' + data.pdf) : 'Aucun PDF';
+        CMS.status('', ''); render();
+      }).catch(function (e) { CMS.status('error', 'Erreur de chargement'); console.error(e); });
+    }
+
+    function persist(msg) {
+      CMS.status('saving', 'Enregistrement…');
+      return CMS.save(FILE, data, sha, msg).then(function (newSha) {
+        sha = newSha; CMS.status('saved', 'Enregistré ✓');
+        setTimeout(function () { CMS.status('', ''); }, 3000);
+      }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); throw e; });
+    }
+
+    window.onPdf = function (input) {
+      if (!input.files || !input.files[0]) return;
+      var hint = document.getElementById('pdfHint');
+      hint.textContent = 'Téléversement…';
+      CMS.uploadImage(input.files[0], 'assets/uploads').then(function (path) {
+        data.pdf = path;
+        document.getElementById('pdfCurrent').textContent = 'Fichier actuel : ' + path;
+        return persist('Mise à jour du PDF de la carte');
+      }).then(function () { hint.textContent = 'PDF mis à jour ✓'; })
+        .catch(function (e) { hint.textContent = 'Erreur de téléversement'; console.error(e); });
+    };
+
+    function render() {
+      var root = document.getElementById('sections');
+      if (!data.sections.length) { root.innerHTML = '<div class="placeholder">Aucune section. Cliquez « + Ajouter une section ».</div>'; return; }
+      root.innerHTML = '';
+      data.sections.forEach(function (sec, si) {
+        var card = document.createElement('div'); card.className = 'section-card';
+        var items = (sec.items || []).map(function (it, ii) {
+          return '<div class="item-row">' +
+            '<div class="item-row__body"><div class="item-row__nom">' + CMS.eh(it.nom) + '</div>' +
+            (it.desc ? '<div class="item-row__desc">' + CMS.eh(it.desc) + '</div>' : '') + '</div>' +
+            (it.prix ? '<div class="item-row__prix">' + CMS.eh(it.prix) + '</div>' : '') +
+            '<div class="item-row__actions">' +
+              '<button class="btn btn-ghost btn-sm" onclick="moveItem(' + si + ',' + ii + ',-1)" ' + (ii === 0 ? 'disabled' : '') + '>↑</button>' +
+              '<button class="btn btn-ghost btn-sm" onclick="moveItem(' + si + ',' + ii + ',1)" ' + (ii === sec.items.length - 1 ? 'disabled' : '') + '>↓</button>' +
+              '<button class="btn btn-ghost btn-sm" onclick="openModal(' + si + ',' + ii + ')">✏️</button>' +
+              '<button class="btn btn-danger btn-sm" onclick="delItem(' + si + ',' + ii + ')">🗑</button>' +
+            '</div></div>';
+        }).join('');
+        card.innerHTML =
+          '<div class="sec-head">' +
+            '<input type="text" value="' + CMS.esc(sec.titre) + '" onchange="renameSection(' + si + ',this.value)">' +
+            '<div style="display:flex;gap:.3rem">' +
+              '<button class="btn btn-ghost btn-sm" onclick="moveSection(' + si + ',-1)" ' + (si === 0 ? 'disabled' : '') + '>↑</button>' +
+              '<button class="btn btn-ghost btn-sm" onclick="moveSection(' + si + ',1)" ' + (si === data.sections.length - 1 ? 'disabled' : '') + '>↓</button>' +
+              '<button class="btn btn-danger btn-sm" onclick="delSection(' + si + ')">Supprimer</button>' +
+            '</div>' +
+          '</div>' + items +
+          '<div style="margin-top:.8rem"><button class="btn btn-primary btn-sm" onclick="openModal(' + si + ',-1)">+ Ajouter un plat</button></div>';
+        root.appendChild(card);
+      });
+    }
+
+    window.addSection = function () {
+      data.sections.push({ id: 's' + Date.now(), titre: 'Nouvelle section', items: [] });
+      render(); persist('Ajout d\'une section');
+    };
+    window.renameSection = function (si, val) { data.sections[si].titre = val.trim(); persist('Renommer section'); };
+    window.delSection = function (si) {
+      if (!confirm('Supprimer la section « ' + data.sections[si].titre + ' » et tous ses plats ?')) return;
+      data.sections.splice(si, 1); render(); persist('Suppression section');
+    };
+    window.moveSection = function (si, dir) {
+      var j = si + dir; if (j < 0 || j >= data.sections.length) return;
+      var t = data.sections[si]; data.sections[si] = data.sections[j]; data.sections[j] = t;
+      render(); persist('Réordonner sections');
+    };
+    window.moveItem = function (si, ii, dir) {
+      var arr = data.sections[si].items, j = ii + dir; if (j < 0 || j >= arr.length) return;
+      var t = arr[ii]; arr[ii] = arr[j]; arr[j] = t; render(); persist('Réordonner plats');
+    };
+
+    window.openModal = function (si, ii) {
+      curSec = si; curItem = ii;
+      var it = ii === -1 ? {} : data.sections[si].items[ii];
+      document.getElementById('modalTitle').textContent = ii === -1 ? 'Nouveau plat' : 'Modifier le plat';
+      document.getElementById('f_nom').value = it.nom || '';
+      document.getElementById('f_desc').value = it.desc || '';
+      document.getElementById('f_prix').value = it.prix || '';
+      document.getElementById('overlay').classList.add('open');
+      document.getElementById('f_nom').focus();
+    };
+    window.closeModal = function () { document.getElementById('overlay').classList.remove('open'); };
+
+    window.saveItem = function () {
+      var nom = document.getElementById('f_nom').value.trim();
+      if (!nom) { alert('Le nom est obligatoire.'); return; }
+      var btn = document.getElementById('saveBtn'); btn.disabled = true;
+      if (!data.sections[curSec].items) data.sections[curSec].items = [];
+      var it = curItem === -1 ? {} : data.sections[curSec].items[curItem];
+      it.nom = nom;
+      it.desc = document.getElementById('f_desc').value.trim();
+      it.prix = document.getElementById('f_prix').value.trim();
+      if (!it.id) it.id = 'i' + Date.now();
+      if (curItem === -1) data.sections[curSec].items.push(it);
+      persist((curItem === -1 ? 'Ajout plat : ' : 'Modif plat : ') + nom)
+        .then(function () { closeModal(); render(); })
+        .finally(function () { btn.disabled = false; });
+    };
+
+    window.delItem = function (si, ii) {
+      var nom = data.sections[si].items[ii].nom;
+      if (!confirm('Supprimer « ' + nom + ' » ?')) return;
+      data.sections[si].items.splice(ii, 1); render(); persist('Suppression plat : ' + nom);
+    };
+
+    document.getElementById('overlay').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+  })();
+  </script>
+</body>
+</html>

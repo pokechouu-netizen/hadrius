@@ -1,0 +1,13 @@
+{
+  "_commentaire": "Toutes les photos du site, modifiables depuis /admin → Photos & galerie. 'logo' = logo en-tête, 'hero' = grande photo de devanture en haut, 'photos' = galerie filtrée (categorie : plats / ambiance / terrasse).",
+  "logo": "assets/logo-hadrius.jpg",
+  "hero": "assets/devanture.jpg",
+  "photos": [
+    { "id": "g1", "image": "assets/plat-1.jpg", "categorie": "plats", "legende": "", "visible": true },
+    { "id": "g2", "image": "assets/plat-2.jpg", "categorie": "plats", "legende": "", "visible": true },
+    { "id": "g3", "image": "assets/gal-1.jpg", "categorie": "ambiance", "legende": "", "visible": true },
+    { "id": "g4", "image": "assets/gal-2.jpg", "categorie": "ambiance", "legende": "", "visible": true },
+    { "id": "g5", "image": "assets/gal-3.jpg", "categorie": "terrasse", "legende": "", "visible": true },
+    { "id": "g6", "image": "assets/gal-4.jpg", "categorie": "terrasse", "legende": "", "visible": true }
+  ]
+}

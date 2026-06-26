@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Textes — Restaurant Hadrius</title>
+  <link rel="icon" href="../assets/logo-hadrius.jpg">
+  <link rel="stylesheet" href="admin.css">
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+
+  <div id="loginScreen">
+    <div class="brand">Restaurant Hadrius</div>
+    <h1>Textes du site</h1>
+    <p>Connectez-vous pour modifier les textes.</p>
+    <button class="btn-login" onclick="CMS.login()">Se connecter</button>
+  </div>
+
+  <div id="adminScreen">
+    <div class="topbar">
+      <h1>✏️ Textes du site</h1>
+      <span class="status" id="statusEl"></span>
+      <a href="index.html" class="btn btn-ghost btn-sm">← Admin</a>
+      <a href="../index.html" target="_blank" class="btn btn-ghost btn-sm">Voir le site ↗</a>
+      <button class="btn-text" onclick="CMS.logout()">Déconnexion</button>
+    </div>
+
+    <div class="panel active">
+      <div class="section-card">
+        <p class="section-card__title">🏛️ Bandeau d'accueil</p>
+        <div class="fg"><label>Petit texte au-dessus du titre</label><input type="text" id="hero_kicker" placeholder="Bienvenue à"></div>
+        <div class="fg"><label>Titre principal</label><input type="text" id="hero_title" placeholder="Restaurant Hadrius"></div>
+        <div class="fg"><label>Sous-titre</label><input type="text" id="hero_sub" placeholder="Vaison-la-Romaine"></div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-card__title">📝 Présentation</p>
+        <div class="fg"><label>Texte de présentation</label><textarea id="intro" rows="3"></textarea></div>
+        <div class="fg">
+          <label>Informations (une par ligne)</label>
+          <textarea id="chips" rows="5"></textarea>
+          <span class="hint">Une information par ligne — ex : « À la carte : 15–30 € ». Elles s'affichent sous forme d'étiquettes.</span>
+        </div>
+        <div class="fg"><label>Texte « Service » (encadré infos pratiques)</label><input type="text" id="service" placeholder="Midi et soirs selon périodes"></div>
+      </div>
+
+      <div class="section-card">
+        <p class="section-card__title">🎉 Événements</p>
+        <div class="fg"><label>Texte de la section Événements</label><textarea id="events_text" rows="3"></textarea></div>
+      </div>
+
+      <div class="form-save-row">
+        <button class="btn btn-primary" id="saveBtn" onclick="saveAll()">Enregistrer les textes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="cms.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var FILE = 'data/contenu.json';
+    var data = {}, sha = '';
+    function v(id) { return document.getElementById(id).value; }
+    function setv(id, val) { var el = document.getElementById(id); if (el) el.value = val == null ? '' : val; }
+
+    CMS.requireAuth(load);
+
+    function load() {
+      CMS.status('saving', 'Chargement…');
+      CMS.load(FILE).then(function (r) {
+        data = r.data; sha = r.sha;
+        var t = data.textes || {};
+        setv('hero_kicker', t.hero_kicker); setv('hero_title', t.hero_title); setv('hero_sub', t.hero_sub);
+        setv('intro', t.intro); setv('service', t.service); setv('events_text', t.events_text);
+        setv('chips', Array.isArray(t.chips) ? t.chips.join('\n') : '');
+        CMS.status('', '');
+      }).catch(function (e) { CMS.status('error', 'Erreur de chargement'); console.error(e); });
+    }
+
+    window.saveAll = function () {
+      var btn = document.getElementById('saveBtn'); btn.disabled = true;
+      data.textes = data.textes || {};
+      var t = data.textes;
+      t.hero_kicker = v('hero_kicker').trim();
+      t.hero_title = v('hero_title').trim();
+      t.hero_sub = v('hero_sub').trim();
+      t.intro = v('intro').trim();
+      t.service = v('service').trim();
+      t.events_text = v('events_text').trim();
+      t.chips = v('chips').split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+      CMS.status('saving', 'Enregistrement…');
+      CMS.save(FILE, data, sha, 'Mise à jour des textes').then(function (newSha) {
+        sha = newSha; CMS.status('saved', 'Enregistré ✓');
+        setTimeout(function () { CMS.status('', ''); }, 3000);
+      }).catch(function (e) { CMS.status('error', 'Erreur'); console.error(e); })
+        .finally(function () { btn.disabled = false; });
+    };
+  })();
+  </script>
+</body>
+</html>

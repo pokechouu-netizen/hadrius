@@ -67,12 +67,6 @@
       "titre": "Desserts",
       "items": [
         {
-          "id": "i11",
-          "nom": "Assiette de fromage",
-          "desc": "",
-          "prix": "6 €"
-        },
-        {
           "id": "i12",
           "nom": "Mousse au chocolat",
           "desc": "",

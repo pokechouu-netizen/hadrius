@@ -49,16 +49,16 @@
           "prix": "18 €"
         },
         {
-          "id": "i10",
-          "nom": "Sauce au choix",
-          "desc": "Poivre ou chasseur",
-          "prix": "2 €"
-        },
-        {
           "id": "i9",
           "nom": "Blanquette de poulet",
           "desc": "",
           "prix": "18 €"
+        },
+        {
+          "id": "i10",
+          "nom": "Sauce au choix",
+          "desc": "Poivre ou chasseur",
+          "prix": "2 €"
         }
       ]
     },

@@ -29,12 +29,6 @@
           "nom": "Carpaccio du moment",
           "desc": "",
           "prix": "8 €"
-        },
-        {
-          "id": "i5",
-          "nom": "Terrine de saumon",
-          "desc": "Et fromage frais",
-          "prix": "8 €"
         }
       ]
     },

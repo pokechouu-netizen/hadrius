@@ -9,8 +9,8 @@
   <link rel="icon" href="assets/logo-hadrius.jpg"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Karla:wght@300;400;500;600;700&family=Marcellus+SC&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=2"/>
 </head>
 <body>
   <div class="bg-scene">
@@ -35,7 +35,7 @@
 
   <main class="section">
     <div class="container">
-      <div class="card info-box legal-page" id="legalBody" data-legal="mentions_legales">
+      <div class="card info-box legal-page">
         <h1 class="h2">Mentions légales</h1>
         <p class="legal-update">Dernière mise à jour : 30 janvier 2025</p>
 
@@ -164,26 +164,29 @@
     <div class="container">
       <div class="links">
         <div>© <span id="year"></span> Restaurant Hadrius — Vaison-la-Romaine</div>
-        <div class="legal">
+        <div class="legal" id="legalBody" data-legal="mentions_legales">
           <a href="mentions-legales.html">Mentions légales</a>
           <a href="politique-confidentialite.html">Confidentialité</a>
           <a href="politique-cookies.html">Cookies</a>
           <a href="cgu.html">CGU</a>
-          <a href="#" id="openCookieSettings">Gérer mes cookies</a>
         </div>
       </div>
     </div>
   </footer>
 
   <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+  <script src="script.js?v=2" defer></script>
   <script>
-    (function(){
-      var el = document.getElementById('legalBody'); if(!el) return;
+    /* Pages légales pilotées depuis /admin → Pages légales (data/mentions.json).
+       Le contenu ci-dessus sert de repli si le fichier n'est pas lisible. */
+    (function () {
+      var el = document.getElementById('legalBody'); if (!el) return;
       var key = el.getAttribute('data-legal');
-      fetch('data/mentions.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;})
-        .then(function(d){ if(d && d[key] && d[key].html) el.innerHTML = d[key].html; }).catch(function(){});
+      fetch('data/mentions.json', { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (d && d[key] && d[key].html) el.innerHTML = d[key].html; })
+        .catch(function () {});
     })();
   </script>
-  <script src="script.js" defer></script>
 </body>
 </html>

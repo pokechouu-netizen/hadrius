@@ -1707,7 +1707,9 @@ p:last-child{ margin-bottom:0 }
 .carte-section__titre {
   font-family: var(--font-display);
   font-size: clamp(1.15rem, 2.4vw, 1.5rem);
-  color: var(--accent);
+  /* --accent-txt et non --accent : c'est la variante du laiton dont le
+     contraste est verifie pour du texte, dans les deux themes. */
+  color: var(--accent-txt);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin: 0 0 0.9rem;
@@ -1716,14 +1718,17 @@ p:last-child{ margin-bottom:0 }
 }
 .carte-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.85rem; }
 .carte-item__ligne { display: flex; align-items: baseline; gap: 0.5rem; }
-.carte-item__nom { color: var(--ink); font-weight: 500; }
+/* --text, pas --ink : sur ce site --ink est la couleur de FOND (celle du
+   body), dans les deux themes. Un nom de plat en --ink etait donc noir sur
+   noir en mode sombre, et creme sur creme en mode clair. */
+.carte-item__nom { color: var(--text); font-weight: 500; }
 .carte-item__points {
   flex: 1 1 auto;
   border-bottom: 1px dotted var(--line);
   transform: translateY(-0.25em);
   min-width: 1.5rem;
 }
-.carte-item__prix { color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.carte-item__prix { color: var(--accent-txt); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .carte-item__desc { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.92em; font-style: italic; }
 
 /* Aperçu PDF réduit lorsque la carte HTML est affichée */

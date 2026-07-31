@@ -158,8 +158,17 @@
   function applyInfos(infos) {
     if (!infos) return;
 
+    // Les attributs du HTML (phone, email, address) ne portent pas le meme nom
+    // que les cles du JSON ecrit par /admin (telephone, email, adresse +
+    // code_postal + ville) : la correspondance est explicite.
+    const valeurs = {
+      phone:   infos.telephone,
+      email:   infos.email,
+      address: [infos.adresse, ((infos.code_postal || "") + " " + (infos.ville || "")).trim()]
+                 .filter(Boolean).join(", "),
+    };
     document.querySelectorAll("[data-info]").forEach((el) => {
-      const v = infos[el.getAttribute("data-info")];
+      const v = valeurs[el.getAttribute("data-info")];
       if (typeof v === "string" && v.trim()) el.textContent = v;
     });
 
@@ -191,6 +200,37 @@
     }
   }
 
+  /* --- Message pop-up (admin → Infos & contact → Popup) ---
+     La restauratrice l'active depuis son backoffice avec un message, un
+     bouton et un delai d'apparition. Present sur l'ancien site, il avait ete
+     perdu lors du passage a la nouvelle mise en page : il est retabli. */
+  function initPopup(popup) {
+    if (!popup || !popup.actif || !popup.message) return;
+    if (document.getElementById("promoPopup")) return;
+
+    const wrap = document.createElement("div");
+    wrap.id = "promoPopup";
+    wrap.setAttribute("role", "dialog");
+    wrap.setAttribute("aria-label", "Message du restaurant");
+
+    const cta = popup.cta_url && popup.cta_label
+      ? '<a class="cta promo-popup__cta" href="' + escapeAttr(popup.cta_url) + '">' +
+        escapeAttr(popup.cta_label) + "</a>"
+      : "";
+    wrap.innerHTML =
+      '<button type="button" class="promo-popup__close" aria-label="Fermer">&times;</button>' +
+      '<p class="promo-popup__text">' + escapeAttr(popup.message) + "</p>" + cta;
+
+    document.body.appendChild(wrap);
+    wrap.querySelector(".promo-popup__close").addEventListener("click", () => wrap.remove());
+    document.addEventListener("keydown", function esc(e) {
+      if (e.key === "Escape") { wrap.remove(); document.removeEventListener("keydown", esc); }
+    });
+
+    setTimeout(() => wrap.classList.add("is-open"),
+               (parseInt(popup.delai_secondes, 10) || 0) * 1000);
+  }
+
   async function applyContent() {
     const [contenu, galerie, carte, infos] = await Promise.all([
       fetchJSON("data/contenu.json"),
@@ -204,6 +244,7 @@
     if (infos) {
       applyHoraires(infos.horaires);
       applyInfos(infos);
+      initPopup(infos.popup);
     } else {
       applyHoraires(null);
     }

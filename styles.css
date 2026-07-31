@@ -1750,3 +1750,29 @@ p:last-child{ margin-bottom:0 }
   font-style: italic;
 }
 .pill--static { cursor: default; pointer-events: none; }
+
+/* ==========================================================================
+   Message pop-up pilote depuis /admin (data/infos.json -> popup)
+   ========================================================================== */
+#promoPopup{
+  position:fixed; left:16px; right:16px; bottom:16px;
+  max-width:420px; margin:0 auto; z-index:9998;
+  background:var(--panel); color:var(--text);
+  border:1px solid var(--line);
+  border-radius:var(--radius-lg); padding:20px 22px 18px;
+  box-shadow:var(--shadow-lg);
+  opacity:0; transform:translateY(14px); pointer-events:none;
+  transition:opacity .45s ease, transform .45s ease;
+}
+#promoPopup.is-open{ opacity:1; transform:none; pointer-events:auto }
+.promo-popup__text{ margin:0; font-size:14px; line-height:1.55 }
+.promo-popup__cta{ margin-top:12px; display:inline-flex }
+.promo-popup__close{
+  position:absolute; top:6px; right:10px;
+  background:none; border:none; color:var(--muted);
+  font-size:22px; line-height:1; cursor:pointer; padding:4px 6px;
+}
+.promo-popup__close:hover{ color:var(--text) }
+@media (prefers-reduced-motion: reduce){
+  #promoPopup{ transition:none }
+}

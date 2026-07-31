@@ -241,8 +241,8 @@
             </div>
           </div>
 
-          <div id="carteMenu" class="carte-menu"></div>
-
+          <!-- Le PDF téléversé depuis /admin → Carte est la carte de
+               référence : il s'affiche en premier et en permanence. -->
           <div class="carte-iframe-wrap">
             <iframe
               class="carte-iframe"
@@ -254,6 +254,10 @@
               <span>Plein écran</span>
             </a>
           </div>
+
+          <!-- Version texte des plats saisis dans /admin → Carte. Elle vient
+               après le PDF : lisible sur téléphone et indexable par Google. -->
+          <div id="carteMenu" class="carte-menu"></div>
         </div>
       </div>
     </section>

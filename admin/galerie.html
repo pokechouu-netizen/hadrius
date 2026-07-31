@@ -52,10 +52,10 @@
       </div>
 
       <div class="panel-header">
-        <h2>Photos de la galerie</h2>
+        <h2>Photos de la bande défilante</h2>
         <button class="btn btn-primary btn-sm" onclick="openModal(-1)">+ Ajouter une photo</button>
       </div>
-      <p class="panel-hint">Ces photos s'affichent dans la galerie, filtrées par catégorie (<strong>Plats</strong>, <strong>Ambiance</strong>, <strong>Terrasse</strong>). Décochez « Visible » pour masquer sans supprimer.</p>
+      <p class="panel-hint">Ces photos défilent en continu dans la bande « En images » du site. <strong>L'ordre de la liste est celui du défilement</strong> — glissez-les pour le changer. Décochez « Visible » pour masquer une photo sans la supprimer.</p>
       <div class="card-list" id="list"><div class="loading">Chargement…</div></div>
     </div>
   </div>
@@ -73,14 +73,6 @@
           <img id="photoImg" style="display:none" alt="">
         </div>
         <p class="photo-slot__hint" id="photoHint" style="text-align:left">JPG ou PNG.</p>
-      </div>
-      <div class="fg">
-        <label>Catégorie *</label>
-        <select id="f_cat">
-          <option value="plats">Plats</option>
-          <option value="ambiance">Ambiance</option>
-          <option value="terrasse">Terrasse</option>
-        </select>
       </div>
       <div class="fg"><label>Légende (optionnelle)</label><input type="text" id="f_legende" placeholder="Ex : Magret de canard"></div>
       <div class="fg" style="flex-direction:row;align-items:center;gap:.5rem">
@@ -174,7 +166,6 @@
       edit = i; pendingImg = null; pendingPreview = null;
       var c = i === -1 ? {} : data.photos[i];
       document.getElementById('modalTitle').textContent = i === -1 ? 'Nouvelle photo' : 'Modifier la photo';
-      document.getElementById('f_cat').value = c.categorie || 'plats';
       document.getElementById('f_legende').value = c.legende || '';
       document.getElementById('f_visible').checked = c.visible !== false;
       setPhoto(c.image || '');
@@ -207,7 +198,9 @@
       var c = edit === -1 ? {} : data.photos[edit];
       if (edit === -1 && !pendingImg) { alert('Ajoutez une photo.'); return; }
       var btn = document.getElementById('saveBtn'); btn.disabled = true;
-      c.categorie = document.getElementById('f_cat').value;
+      // La catégorie ne sert plus (la bande n'a plus de filtres) mais on
+      // conserve la valeur déjà enregistrée pour ne rien perdre.
+      if (c.categorie == null) c.categorie = 'photos';
       c.legende = document.getElementById('f_legende').value.trim();
       c.visible = document.getElementById('f_visible').checked;
       if (pendingImg) c.image = pendingImg;

@@ -54,24 +54,81 @@
       if (heroImg) heroImg.src = galerie.hero;
     }
 
-    const track = document.querySelector(".gallery-carousel-track");
-    if (!track || !Array.isArray(galerie.photos)) return;
-    const vis = galerie.photos.filter((p) => p.image && p.visible !== false);
-    if (!vis.length) return;
+    construireBande(galerie.photos);
+  }
 
-    track.innerHTML = vis
-      .map((p, i) => {
-        const leg = p.legende || "";
-        return `
-          <div class="gallery-carousel-slide" data-category="${escapeAttr(p.categorie || "photos")}" data-index="${i}" tabindex="0" role="button" aria-label="Agrandir la photo${leg ? " : " + escapeAttr(leg) : ""}">
-            <img src="${escapeAttr(p.image)}" alt="${escapeAttr(leg || "Restaurant Hadrius")}" loading="lazy" decoding="async">
-            <div class="gallery-slide-overlay">
-              <span class="gallery-slide-caption">${escapeAttr(leg)}</span>
-              <svg class="gallery-slide-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-          </div>`;
+  /* --- Bande photos défilante (admin → Photos & galerie) ------------------
+     Le rail contient deux copies identiques de la liste : l'animation CSS
+     translate de -50%, donc la seconde moitié prend exactement la place de
+     la première et la boucle est sans raccord. Pas de loading="lazy" : les
+     vignettes sont hors de l'écran et ne se chargeraient jamais. */
+
+  // Vitesse de défilement, en pixels par seconde.
+  var BANDE_VITESSE = 90;
+
+  function bandeVignettes(list, original) {
+    return list
+      .map(function (p, i) {
+        var leg = p.legende || "";
+        return (
+          '<figure class="photo-band__slide"' +
+          (original ? ' data-original="1"' : "") +
+          ' data-src="' + escapeAttr(p.image) + '"' +
+          ' tabindex="' + (original ? "0" : "-1") + '" role="button"' +
+          ' aria-label="Agrandir la photo' + (leg ? " : " + escapeAttr(leg) : "") + '">' +
+          '<img src="' + escapeAttr(p.image) + '" alt="' + escapeAttr(leg || "Restaurant Hadrius") +
+          '" decoding="async" fetchpriority="low">' +
+          (leg ? '<figcaption class="photo-band__caption">' + escapeAttr(leg) + "</figcaption>" : "") +
+          "</figure>"
+        );
       })
       .join("");
+  }
+
+  function construireBande(photos) {
+    var track = document.querySelector(".photo-band__track");
+    if (!track || !Array.isArray(photos)) return;
+    var vis = photos.filter(function (p) { return p.image && p.visible !== false; });
+    if (!vis.length) return;
+
+    // 1er passage : on mesure la largeur réelle de la liste. Les vignettes ont
+    // un aspect-ratio en CSS, donc la largeur est connue avant même que les
+    // images soient chargées.
+    track.innerHTML = bandeVignettes(vis, true);
+    var largeurBase = track.scrollWidth;
+    if (!largeurBase) {
+      track.innerHTML = bandeVignettes(vis, true) + bandeVignettes(vis, false);
+      return;
+    }
+
+    // Une copie doit couvrir l'écran, sinon on verrait un vide entre la fin de
+    // la liste et son retour. Peu de photos + grand écran = on répète.
+    var parCopie = Math.max(1, Math.ceil((window.innerWidth * 1.2) / largeurBase));
+    var copie = [];
+    for (var i = 0; i < parCopie; i++) copie = copie.concat(vis);
+
+    track.innerHTML = bandeVignettes(copie, true) + bandeVignettes(copie, false);
+    track.style.setProperty(
+      "--bande-duree",
+      (largeurBase * parCopie / BANDE_VITESSE).toFixed(1) + "s"
+    );
+  }
+
+  // Rotation d'un téléphone, fenêtre agrandie : on recalcule le nombre de
+  // copies, sinon un écran devenu plus large laisse apparaître un trou.
+  function surveillerBande(photos) {
+    if (!Array.isArray(photos)) return;
+    var derniere = window.innerWidth;
+    var minuteur = null;
+    window.addEventListener("resize", function () {
+      if (window.innerWidth === derniere) return;
+      derniere = window.innerWidth;
+      clearTimeout(minuteur);
+      minuteur = setTimeout(function () {
+        construireBande(photos);
+        document.dispatchEvent(new CustomEvent("bande:rendue"));
+      }, 250);
+    });
   }
 
   /* --- Carte : plats saisis dans /admin + PDF téléversé (admin → Carte) --- */
@@ -240,6 +297,7 @@
     ]);
     applyTextes(contenu && contenu.textes);
     applyGalerie(galerie);
+    if (galerie && Array.isArray(galerie.photos)) surveillerBande(galerie.photos);
     applyCarte(carte);
     if (infos) {
       applyHoraires(infos.horaires);
@@ -440,122 +498,51 @@
   });
 
   /* ==========================================================================
-     6. Galerie : carrousel, filtres, visionneuse
+     6. Bande photos défilante + visionneuse
      ========================================================================== */
 
   function initGalleryAndLightbox() {
-    const galCarousel = document.getElementById("galleryCarousel");
-    if (!galCarousel) return;
+    const band = document.getElementById("photoBand");
+    if (!band) return;
+    const track = band.querySelector(".photo-band__track");
+    if (!track) return;
 
-    const track = galCarousel.querySelector(".gallery-carousel-track");
-    const slides = Array.from(galCarousel.querySelectorAll(".gallery-carousel-slide"));
-    const prevBtn = galCarousel.querySelector(".gal-car-prev");
-    const nextBtn = galCarousel.querySelector(".gal-car-next");
-    const counterCurrent = document.querySelector(".gal-car-current");
-    const counterTotal = document.querySelector(".gal-car-total");
-    const filterBtns = Array.from(document.querySelectorAll(".filter-btn"));
+    // Les vignettes uniques (la seconde moitié du rail n'est qu'une copie).
+    let visibleSlides = Array.from(track.querySelectorAll('.photo-band__slide[data-original="1"]'));
 
-    if (!slides.length) {
-      if (track) {
-        track.innerHTML =
-          '<p class="gallery-empty">Les photos ne se chargent pas pour le moment. Retrouvez-les sur notre page Facebook.</p>';
-      }
-      prevBtn?.setAttribute("hidden", "");
-      nextBtn?.setAttribute("hidden", "");
-      document.querySelector(".gal-car-counter")?.setAttribute("hidden", "");
+    if (!visibleSlides.length) {
+      track.innerHTML =
+        '<p class="photo-band__vide">Les photos arrivent bientôt.</p>';
       return;
     }
 
-    const activeFilter = document.querySelector(".filter-btn.is-active")?.dataset.filter || "plats";
-    let visibleSlides = slides.filter((s) => s.dataset.category === activeFilter);
-    let page = 0;
-    let perPage = 3;
-    let startX = 0, dx = 0, isDown = false, wasDragged = false;
-
-    // Doit rester aligné sur les points de rupture de styles.css
-    const getPerPage = () => (window.innerWidth <= 720 ? 1 : window.innerWidth <= 920 ? 2 : 3);
-    const getGap = () => (window.innerWidth <= 720 ? 0 : 14);
-
-    const totalPages = () => Math.max(1, visibleSlides.length - perPage + 1);
-
-    const getSlideStep = () => {
-      const vw = track.parentElement.offsetWidth;
-      return (vw + getGap()) / perPage;
+    // Ouverture par délégation : fonctionne aussi sur les copies du rail, et
+    // survit à une reconstruction de la bande (redimensionnement, CMS).
+    const indexDepuis = (el) => {
+      const src = el.getAttribute("data-src");
+      return visibleSlides.findIndex((s) => s.getAttribute("data-src") === src);
     };
 
-    const update = () => {
-      if (counterCurrent) counterCurrent.textContent = page + 1;
-      if (counterTotal) counterTotal.textContent = totalPages();
-      if (prevBtn) prevBtn.disabled = page <= 0;
-      if (nextBtn) nextBtn.disabled = page >= totalPages() - 1;
-    };
-
-    const goTo = (p, animate = true) => {
-      page = Math.max(0, Math.min(p, totalPages() - 1));
-      track.style.transition = animate ? "transform .5s cubic-bezier(.2,.75,.2,1)" : "none";
-      track.style.transform = `translate3d(${-page * getSlideStep()}px,0,0)`;
-      update();
-    };
-
-    const refreshLayout = () => {
-      perPage = getPerPage();
-      slides.forEach((s) => {
-        s.style.display = visibleSlides.includes(s) ? "" : "none";
-      });
-      if (page >= totalPages()) page = Math.max(0, totalPages() - 1);
-      goTo(page, false);
-    };
-
-    prevBtn?.addEventListener("click", (e) => { e.stopPropagation(); goTo(page - 1); });
-    nextBtn?.addEventListener("click", (e) => { e.stopPropagation(); goTo(page + 1); });
-
-    galCarousel.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".gal-car-btn")) return;
-      isDown = true;
-      wasDragged = false;
-      startX = e.clientX;
-      dx = 0;
-      track.style.transition = "none";
+    track.addEventListener("click", (e) => {
+      const slide = e.target.closest(".photo-band__slide");
+      if (!slide) return;
+      const i = indexDepuis(slide);
+      if (i >= 0) openLightbox(i);
+    });
+    track.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const slide = e.target.closest(".photo-band__slide");
+      if (!slide) return;
+      e.preventDefault();
+      const i = indexDepuis(slide);
+      if (i >= 0) openLightbox(i);
     });
 
-    galCarousel.addEventListener("pointermove", (e) => {
-      if (!isDown) return;
-      dx = e.clientX - startX;
-      if (Math.abs(dx) > 5) wasDragged = true;
-      track.style.transform = `translate3d(${-page * getSlideStep() + dx}px,0,0)`;
+    // Après un recalcul de la bande, la liste des vignettes change.
+    document.addEventListener("bande:rendue", () => {
+      visibleSlides = Array.from(track.querySelectorAll('.photo-band__slide[data-original="1"]'));
     });
 
-    const pointerUp = () => {
-      if (!isDown) return;
-      isDown = false;
-      if (Math.abs(dx) > 48) goTo(dx > 0 ? page - 1 : page + 1);
-      else goTo(page);
-    };
-    galCarousel.addEventListener("pointerup", pointerUp);
-    galCarousel.addEventListener("pointercancel", pointerUp);
-
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(refreshLayout, 120);
-    });
-
-    refreshLayout();
-
-    // --- Filtres ---
-    filterBtns.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        filterBtns.forEach((b) => {
-          b.classList.remove("is-active");
-          b.setAttribute("aria-pressed", "false");
-        });
-        btn.classList.add("is-active");
-        btn.setAttribute("aria-pressed", "true");
-        visibleSlides = slides.filter((s) => s.dataset.category === btn.dataset.filter);
-        page = 0;
-        refreshLayout();
-      });
-    });
 
     // --- Visionneuse ---
     const lightbox = document.getElementById("lightbox");
@@ -635,17 +622,8 @@
       lbPlay?.setAttribute("aria-label", "Arrêter la lecture automatique");
     };
 
-    slides.forEach((slide) => {
-      const activate = () => {
-        if (wasDragged) return;
-        const idx = visibleSlides.indexOf(slide);
-        if (idx >= 0) openLightbox(idx);
-      };
-      slide.addEventListener("click", activate);
-      slide.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); }
-      });
-    });
+    // L'ouverture des vignettes est gérée plus haut par délégation sur le
+    // rail : cela couvre aussi les copies et survit à une reconstruction.
 
     lbClose?.addEventListener("click", closeLightbox);
     lbBackdrop?.addEventListener("click", closeLightbox);

@@ -734,75 +734,27 @@ p:last-child{ margin-bottom:0 }
   margin-bottom:var(--sp-6);
 }
 
-.gallery-filters{ display:flex; flex-wrap:wrap; gap:var(--sp-2) }
 
-.filter-btn{
-  min-height:40px;
-  padding:9px 18px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  background:transparent;
-  color:var(--muted);
-  font-family:var(--font-carved);
-  font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-  cursor:pointer;
-  transition:border-color .2s ease, color .2s ease, background-color .2s ease;
-  touch-action:manipulation;
-}
-.filter-btn:hover{ color:var(--accent-txt); border-color:var(--accent) }
-.filter-btn.is-active{
-  background:var(--cta-bg);
-  border-color:transparent;
-  color:var(--cta-fg);
-}
 
-.gallery-carousel-wrap{ position:relative }
-.gallery-carousel{ position:relative }
-.gallery-carousel-viewport{ overflow:hidden; border-radius:var(--radius) }
 
-.gallery-carousel-track{
-  display:flex;
-  gap:14px;
-  will-change:transform;
-}
 
-.gallery-carousel-slide{
-  position:relative;
-  flex:0 0 calc((100% - 28px) / 3);
-  aspect-ratio:4/5;
-  overflow:hidden;
-  border-radius:var(--radius);
-  border:1px solid var(--line-soft);
-  cursor:zoom-in;
-  background:var(--surface);
-}
-.gallery-carousel-slide img{
-  width:100%; height:100%;
-  object-fit:cover;
-  transition:transform .6s cubic-bezier(.2,.8,.2,1);
-}
-.gallery-carousel-slide:hover img{ transform:scale(1.05) }
 
-.gallery-slide-overlay{
-  position:absolute; inset:auto 0 0 0;
-  display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
-  padding:var(--sp-6) var(--sp-4) var(--sp-4);
-  background:linear-gradient(180deg,transparent,rgba(12,10,8,.88));
-  opacity:0;
-  transform:translateY(6px);
-  transition:opacity .3s ease, transform .3s ease;
-  pointer-events:none;
-}
-.gallery-carousel-slide:hover .gallery-slide-overlay{ opacity:1; transform:none }
 
-.gallery-slide-caption{
-  font-size:13px; line-height:1.4;
-  color:#F0EADC;
-}
-.gallery-slide-icon{
-  width:18px; height:18px; flex:none;
-  fill:none; stroke:var(--accent); stroke-width:1.6; stroke-linecap:round;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .gallery-empty,
 .horaires-loading,
@@ -815,33 +767,15 @@ p:last-child{ margin-bottom:0 }
 .horaires-error{ color:var(--accent-txt) }
 
 /* Flèches */
-.gal-car-btn{
-  position:absolute; top:50%;
-  width:46px; height:46px; margin-top:-23px;
-  display:grid; place-items:center;
-  border:1px solid var(--line);
-  border-radius:50%;
-  background:color-mix(in srgb, var(--ink) 84%, transparent);
-  backdrop-filter:blur(8px);
-  cursor:pointer;
-  transition:opacity .2s ease, border-color .2s ease, background-color .2s ease;
-  z-index:2;
-}
-.gal-car-btn svg{ width:20px; height:20px; fill:var(--text) }
-.gal-car-btn:hover:not(:disabled){ border-color:var(--accent) }
-.gal-car-btn:hover:not(:disabled) svg{ fill:var(--accent-txt) }
-.gal-car-btn:disabled{ opacity:.25; cursor:not-allowed }
-.gal-car-prev{ left:-14px }
-.gal-car-next{ right:-14px }
 
-.gal-car-counter{
-  margin-top:var(--sp-4);
-  text-align:center;
-  font-family:var(--font-carved);
-  font-size:11px; letter-spacing:.24em;
-  color:var(--faint);
-  font-variant-numeric:tabular-nums;
-}
+
+
+
+
+
+
+
+
 
 /* --------------------------------------------------------------------------
    14. La table — horaires gravés, contact, plan
@@ -1580,13 +1514,13 @@ p:last-child{ margin-bottom:0 }
   .maison-grid,
   .table-grid,
   .events-layout{ grid-template-columns:1fr }
-  .gal-car-prev{ left:6px }
-  .gal-car-next{ right:6px }
+
+
 }
 
 /* Bascule desktop → mobile : la nav complète cède la place au bouton Menu */
 @media (max-width:920px){
-  .gallery-carousel-slide{ flex-basis:calc((100% - 14px) / 2) }
+
   .nav-links{ display:none }
   .desktop-only{ display:none !important }
   .mobile-only{ display:inline-flex !important }
@@ -1628,9 +1562,9 @@ p:last-child{ margin-bottom:0 }
   .horaires-temps{ justify-content:flex-start }
 
   .gallery-header{ align-items:flex-start; flex-direction:column }
-  .gallery-carousel-track{ gap:0 }
-  .gallery-carousel-slide{ flex-basis:100%; aspect-ratio:3/4 }
-  .gallery-slide-overlay{ opacity:1; transform:none }
+
+
+
 
   .fb-widget-iframe{ height:440px }
 
@@ -1689,7 +1623,7 @@ p:last-child{ margin-bottom:0 }
 @media print{
   .topbar,.mobile-menu,.hero-banner__scroll,
   .cookie-banner,.cookie-modal,.lightbox,
-  #phoneModal,.bg-scene,.noise,.gal-car-btn{ display:none !important }
+
   body{ padding-top:0; background:#fff; color:#000 }
 }
 
@@ -1775,4 +1709,72 @@ p:last-child{ margin-bottom:0 }
 .promo-popup__close:hover{ color:var(--text) }
 @media (prefers-reduced-motion: reduce){
   #promoPopup{ transition:none }
+}
+
+/* ==========================================================================
+   BANDE PHOTOS DÉFILANTE (admin → Photos & galerie)
+   Le rail contient deux copies identiques : l'animation translate de -50%,
+   donc la boucle est sans raccord. La durée est calculée par script.js à
+   partir de la largeur réelle, pour garder une vitesse constante quel que
+   soit le nombre de photos.
+   ========================================================================== */
+.photo-band{
+  overflow:hidden; width:100%;
+  margin-top:var(--sp-6);
+  border-block:1px solid var(--line);
+  background:var(--ink-2);
+}
+.photo-band__track{
+  display:flex; gap:0; width:max-content;
+  animation:bandeDefile var(--bande-duree, 60s) linear infinite;
+  will-change:transform;
+}
+.photo-band:hover .photo-band__track,
+.photo-band:focus-within .photo-band__track{ animation-play-state:paused }
+
+.photo-band__slide{
+  position:relative; margin:0; flex-shrink:0;
+  height:260px;
+  /* aspect-ratio donne la largeur AVANT le chargement de l'image : sans ça
+     le rail mesure 0px et rien ne s'affiche. */
+  aspect-ratio:3 / 2; width:auto;
+  cursor:zoom-in; overflow:hidden;
+  border-right:1px solid var(--line-soft);
+}
+.photo-band__slide img{
+  display:block; width:100%; height:100%; object-fit:cover;
+  filter:brightness(.86) saturate(.92);
+  transition:transform .6s var(--ease, ease), filter .6s ease;
+}
+.photo-band__slide:hover img,
+.photo-band__slide:focus-visible img{ transform:scale(1.06); filter:none }
+.photo-band__slide:focus-visible{ outline:2px solid var(--accent-txt); outline-offset:-3px }
+
+.photo-band__caption{
+  position:absolute; inset:auto 0 0 0;
+  padding:26px 14px 10px;
+  font-family:var(--font-body); font-size:12px; letter-spacing:.04em;
+  color:var(--text);
+  background:linear-gradient(to top, rgba(10,9,7,.82), transparent);
+  opacity:0; transition:opacity .4s ease;
+}
+.photo-band__slide:hover .photo-band__caption,
+.photo-band__slide:focus-visible .photo-band__caption{ opacity:1 }
+
+.photo-band__hint{
+  margin:var(--sp-4) 0 0; text-align:center;
+  font-size:12.5px; letter-spacing:.06em; color:var(--faint);
+}
+.photo-band__vide{ padding:var(--sp-6); text-align:center; color:var(--muted) }
+
+@keyframes bandeDefile{
+  from{ transform:translateX(0) }
+  to  { transform:translateX(-50%) }
+}
+@media (max-width:768px){
+  .photo-band__slide{ height:170px }
+}
+@media (prefers-reduced-motion: reduce){
+  .photo-band__track{ animation:none }
+  .photo-band{ overflow-x:auto }
 }

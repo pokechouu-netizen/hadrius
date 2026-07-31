@@ -144,43 +144,10 @@
       if (openBtn) openBtn.href = carte.pdf;
     }
 
-    // Les plats saisis dans /admin sont rendus SOUS le PDF, en version texte :
-    // lisible sur téléphone (où les PDF s'affichent mal) et indexable par les
-    // moteurs de recherche. Ils ne remplacent pas le PDF.
-    const box = document.getElementById("carteMenu");
-    const sections = Array.isArray(carte.sections) ? carte.sections : [];
-    const remplies = sections.filter((s) => Array.isArray(s.items) && s.items.length);
-    if (!box || !remplies.length) return;
-
-    box.innerHTML =
-      '<p class="carte-menu__intro">La carte en texte</p>' + remplies
-      .map(
-        (s) => `
-        <div class="carte-section">
-          <h4 class="carte-section__titre">${escapeAttr(s.titre || "")}</h4>
-          <ul class="carte-liste">
-            ${s.items
-              .map(
-                (it) => `
-              <li class="carte-item">
-                <div class="carte-item__ligne">
-                  <span class="carte-item__nom">${escapeAttr(it.nom || "")}</span>
-                  <span class="carte-item__points" aria-hidden="true"></span>
-                  <span class="carte-item__prix">${escapeAttr(it.prix || "")}</span>
-                </div>
-                ${it.desc ? `<p class="carte-item__desc">${escapeAttr(it.desc)}</p>` : ""}
-              </li>`
-              )
-              .join("")}
-          </ul>
-        </div>`
-      )
-      .join("");
-
-    // Le PDF téléversé par la restauratrice reste affiché en permanence :
-    // c'est sa carte de référence. La version texte ci-dessus ne fait que la
-    // compléter. (Auparavant l'aperçu PDF était masqué dès que des plats
-    // étaient saisis — le PDF devenait invisible sur le site.)
+    // Le PDF est la seule presentation de la carte sur le site : c'est celui
+    // que la restauratrice televerse depuis /admin. Les plats qu'elle saisit
+    // dans data/carte.json (cle "sections") ne sont volontairement pas rendus
+    // ici — le PDF fait deja office de carte.
   }
 
   /* --- Horaires par période (admin → Horaires) --- */

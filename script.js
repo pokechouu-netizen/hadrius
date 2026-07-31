@@ -135,7 +135,8 @@
   function applyCarte(carte) {
     if (!carte) return;
 
-    // Le PDF reste accessible en plein écran.
+    // Le PDF téléversé depuis /admin est la carte de référence : il s'affiche
+    // en permanence, en haut de la section, et reste ouvrable en plein écran.
     if (carte.pdf) {
       const iframe = document.querySelector(".carte-iframe");
       if (iframe) iframe.src = carte.pdf + "#view=FitH&toolbar=0&navpanes=0";
@@ -143,14 +144,16 @@
       if (openBtn) openBtn.href = carte.pdf;
     }
 
-    // La carte saisie plat par plat prime sur l'aperçu PDF : c'est elle que la
-    // restauratrice met à jour au quotidien.
+    // Les plats saisis dans /admin sont rendus SOUS le PDF, en version texte :
+    // lisible sur téléphone (où les PDF s'affichent mal) et indexable par les
+    // moteurs de recherche. Ils ne remplacent pas le PDF.
     const box = document.getElementById("carteMenu");
     const sections = Array.isArray(carte.sections) ? carte.sections : [];
     const remplies = sections.filter((s) => Array.isArray(s.items) && s.items.length);
     if (!box || !remplies.length) return;
 
-    box.innerHTML = remplies
+    box.innerHTML =
+      '<p class="carte-menu__intro">La carte en texte</p>' + remplies
       .map(
         (s) => `
         <div class="carte-section">
@@ -174,10 +177,10 @@
       )
       .join("");
 
-    // On masque l'aperçu PDF quand la carte HTML est disponible (doublon),
-    // sans retirer le bouton « Plein écran ».
-    const wrap = document.querySelector(".carte-iframe-wrap");
-    if (wrap) wrap.classList.add("carte-iframe-wrap--compact");
+    // Le PDF téléversé par la restauratrice reste affiché en permanence :
+    // c'est sa carte de référence. La version texte ci-dessus ne fait que la
+    // compléter. (Auparavant l'aperçu PDF était masqué dès que des plats
+    // étaient saisis — le PDF devenait invisible sur le site.)
   }
 
   /* --- Horaires par période (admin → Horaires) --- */

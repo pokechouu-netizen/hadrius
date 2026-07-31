@@ -259,6 +259,9 @@
     </section>
 
     <!-- ================= Galerie ================= -->
+    <!-- ═══════ EN IMAGES — bande photos défilante ═══════
+         Les photos viennent de /admin → Photos & galerie. La bande se
+         remplit toute seule : ajouter ou retirer une photo suffit. -->
     <section class="section" id="photos">
       <div class="container">
         <div class="gallery-header reveal">
@@ -268,32 +271,17 @@
             </div>
             <h2 class="h2">La salle, la terrasse, l'assiette</h2>
           </div>
-
-          <div class="gallery-filters" role="group" aria-label="Filtrer les photos">
-            <button class="filter-btn is-active" type="button" data-filter="plats">Plats</button>
-            <button class="filter-btn" type="button" data-filter="ambiance">Ambiance</button>
-            <button class="filter-btn" type="button" data-filter="terrasse">Terrasse</button>
-          </div>
         </div>
+      </div>
 
-        <div class="gallery-carousel-wrap reveal">
-          <div class="gallery-carousel" id="galleryCarousel">
-            <div class="gallery-carousel-viewport">
-              <div class="gallery-carousel-track"><!-- Rempli depuis l'onglet PHOTOS du Google Sheet --></div>
-            </div>
-
-            <button class="gal-car-btn gal-car-prev" type="button" aria-label="Photos précédentes">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 19.4 8 12l7.4-7.4 1.4 1.4L10.8 12l6 6-1.4 1.4Z"/></svg>
-            </button>
-            <button class="gal-car-btn gal-car-next" type="button" aria-label="Photos suivantes">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 4.6 16 12l-7.4 7.4-1.4-1.4 6-6-6-6 1.4-1.4Z"/></svg>
-            </button>
-          </div>
-
-          <p class="gal-car-counter">
-            <span class="gal-car-current">1</span> / <span class="gal-car-total">1</span>
-          </p>
+      <div class="photo-band reveal" id="photoBand">
+        <div class="photo-band__track">
+          <!-- Rempli depuis data/galerie.json (admin → Photos & galerie) -->
         </div>
+      </div>
+
+      <div class="container">
+        <p class="photo-band__hint">Cliquez sur une photo pour l'agrandir.</p>
       </div>
     </section>
 

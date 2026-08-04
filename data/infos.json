@@ -15,15 +15,30 @@
         "id": "p1",
         "label": "Du 01/01 au 30/04",
         "lignes": [
-          { "id": "l1", "jours": "Lundi au samedi", "midi": "12h à 13h45", "soir": "" },
-          { "id": "l2", "jours": "Jeudi, vendredi et samedi", "midi": "", "soir": "19h00 à 21h30" }
+          {
+            "id": "l1",
+            "jours": "Lundi au samedii",
+            "midi": "12h à 13h45",
+            "soir": ""
+          },
+          {
+            "id": "l2",
+            "jours": "Jeudi, vendredi et samedi",
+            "midi": "",
+            "soir": "19h00 à 21h30"
+          }
         ]
       },
       {
         "id": "p2",
         "label": "Du 01/05 au 30/10",
         "lignes": [
-          { "id": "l3", "jours": "Mardi, mercredi, jeudi, vendredi et samedi", "midi": "12h à 13h45", "soir": "19h à 21h" }
+          {
+            "id": "l3",
+            "jours": "Mardi, mercredi, jeudi, vendredi et samedi",
+            "midi": "12h à 13h45",
+            "soir": "19h à 21h"
+          }
         ]
       }
     ]

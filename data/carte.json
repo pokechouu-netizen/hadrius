@@ -1,6 +1,6 @@
 {
   "_commentaire": "Carte du restaurant. Modifiable depuis /admin -> Carte. 'affichage' decide de ce qui apparait sur le site : 'pdf' ou 'plats'. Les deux restent modifiables, choisir l un masque l autre.",
-  "affichage": "plats",
+  "affichage": "pdf",
   "pdf": "carte.pdf",
   "sections": [
     {

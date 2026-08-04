@@ -6,6 +6,20 @@
   <title>Carte — Restaurant Hadrius</title>
   <link rel="icon" href="../assets/logo-hadrius.jpg">
   <link rel="stylesheet" href="admin.css">
+  <style>
+    .choix-modes { display:flex; gap:.75rem; flex-wrap:wrap; margin-top:.6rem }
+    .choix-mode { flex:1 1 220px; display:flex; gap:.6rem; align-items:flex-start;
+      border:1px solid rgba(0,0,0,.14); border-radius:8px; padding:.7rem .8rem; cursor:pointer }
+    .choix-mode:hover { border-color:rgba(0,0,0,.3) }
+    .choix-mode input { margin-top:.2rem; width:auto; flex:none }
+    .choix-mode span { display:flex; flex-direction:column; gap:.15rem }
+    .choix-mode small { opacity:.7; font-size:.8rem }
+    .choix-mode.actif { border-color:#2e7d32; background:rgba(46,125,50,.06) }
+    .etat { font-size:.72rem; font-weight:600; padding:.12rem .45rem; border-radius:999px;
+      vertical-align:middle; margin-left:.4rem; text-transform:none; letter-spacing:0 }
+    .etat--actif { background:rgba(46,125,50,.14); color:#2e7d32 }
+    .etat--masque { background:rgba(0,0,0,.08); opacity:.75 }
+  </style>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <style>
     .sec-head { display:flex; align-items:center; gap:.6rem; justify-content:space-between; margin-bottom:.9rem; }
@@ -38,8 +52,27 @@
     </div>
 
     <div class="panel active">
-      <div class="section-card">
-        <p class="section-card__title">📄 PDF de la carte</p>
+      <div class="section-card" id="choixCard">
+        <p class="section-card__title">🍽️ Ce qui s'affiche sur le site</p>
+        <p class="panel-hint">
+          Choisissez comment votre carte apparaît aux visiteurs. Vous pouvez
+          continuer à modifier les deux : choisir l'un masque simplement l'autre
+          sur le site, rien n'est effacé.
+        </p>
+        <div class="choix-modes">
+          <label class="choix-mode">
+            <input type="radio" name="affichage" value="pdf" onchange="setAffichage('pdf')">
+            <span><strong>Le PDF</strong><small>Votre carte telle que vous la téléversez</small></span>
+          </label>
+          <label class="choix-mode">
+            <input type="radio" name="affichage" value="plats" onchange="setAffichage('plats')">
+            <span><strong>Les plats saisis ici</strong><small>Le tableau que vous remplissez plus bas</small></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="section-card" id="pdfCard">
+        <p class="section-card__title">📄 PDF de la carte <span class="etat" id="pdfEtat"></span></p>
         <p class="panel-hint">Le bouton « Ouvrir la carte en PDF » du site pointe vers ce fichier. Téléversez un nouveau PDF pour le remplacer.</p>
         <p class="pdf-current" id="pdfCurrent">—</p>
         <input type="file" accept="application/pdf" id="pdfInput" onchange="onPdf(this)">
@@ -47,7 +80,7 @@
       </div>
 
       <div class="panel-header">
-        <h2>Sections &amp; plats</h2>
+        <h2>Sections &amp; plats <span class="etat" id="platsEtat"></span></h2>
         <button class="btn btn-primary btn-sm" onclick="addSection()">+ Ajouter une section</button>
       </div>
       <p class="panel-hint">Chaque section (Entrées, Plats…) contient des plats avec un nom, une description (optionnelle) et un prix. Laissez le prix vide pour une simple information.</p>
@@ -85,6 +118,7 @@
         data = r.data; sha = r.sha;
         if (!Array.isArray(data.sections)) data.sections = [];
         document.getElementById('pdfCurrent').textContent = data.pdf ? ('Fichier actuel : ' + data.pdf) : 'Aucun PDF';
+        renderChoix();
         CMS.status('', ''); render();
       }).catch(function (e) { CMS.status('error', 'Erreur de chargement'); console.error(e); });
     }
@@ -107,6 +141,30 @@
         return persist('Mise à jour du PDF de la carte');
       }).then(function () { hint.textContent = 'PDF mis à jour ✓'; })
         .catch(function (e) { hint.textContent = 'Erreur de téléversement'; console.error(e); });
+    };
+
+    function renderChoix() {
+      var mode = data.affichage === 'plats' ? 'plats' : 'pdf';
+      document.querySelectorAll('input[name="affichage"]').forEach(function (r) {
+        r.checked = (r.value === mode);
+        r.closest('.choix-mode').classList.toggle('actif', r.checked);
+      });
+      var pdfE = document.getElementById('pdfEtat');
+      var plE = document.getElementById('platsEtat');
+      if (pdfE) {
+        pdfE.textContent = mode === 'pdf' ? 'affiché sur le site' : 'masqué';
+        pdfE.className = 'etat ' + (mode === 'pdf' ? 'etat--actif' : 'etat--masque');
+      }
+      if (plE) {
+        plE.textContent = mode === 'plats' ? 'affiché sur le site' : 'masqué';
+        plE.className = 'etat ' + (mode === 'plats' ? 'etat--actif' : 'etat--masque');
+      }
+    }
+
+    window.setAffichage = function (mode) {
+      data.affichage = mode;
+      renderChoix();
+      persist(mode === 'pdf' ? 'Carte : affichage du PDF' : 'Carte : affichage des plats saisis');
     };
 
     function render() {

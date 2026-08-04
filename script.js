@@ -131,12 +131,21 @@
     });
   }
 
-  /* --- Carte : plats saisis dans /admin + PDF téléversé (admin → Carte) --- */
+  /* --- Carte (admin → Carte) -----------------------------------------------
+     La restauratrice choisit dans son backoffice ce qui s'affiche sur le
+     site : soit le PDF qu'elle televerse, soit les plats qu'elle saisit un
+     par un. La cle "affichage" de data/carte.json tranche ("pdf" ou "plats").
+     Les deux restent modifiables dans /admin : choisir l'un masque l'autre
+     sur le site, il n'efface rien. En l'absence de cle, on garde le PDF —
+     c'est ce qui etait affiche jusqu'ici. */
   function applyCarte(carte) {
     if (!carte) return;
 
-    // Le PDF téléversé depuis /admin est la carte de référence : il s'affiche
-    // en permanence, en haut de la section, et reste ouvrable en plein écran.
+    const mode = carte.affichage === "plats" ? "plats" : "pdf";
+    const wrap = document.querySelector(".carte-iframe-wrap");
+    const box = document.getElementById("carteMenu");
+
+    // --- Le PDF ---
     if (carte.pdf) {
       const iframe = document.querySelector(".carte-iframe");
       if (iframe) iframe.src = carte.pdf + "#view=FitH&toolbar=0&navpanes=0";
@@ -144,10 +153,45 @@
       if (openBtn) openBtn.href = carte.pdf;
     }
 
-    // Le PDF est la seule presentation de la carte sur le site : c'est celui
-    // que la restauratrice televerse depuis /admin. Les plats qu'elle saisit
-    // dans data/carte.json (cle "sections") ne sont volontairement pas rendus
-    // ici — le PDF fait deja office de carte.
+    // --- Les plats saisis a la main ---
+    const sections = Array.isArray(carte.sections) ? carte.sections : [];
+    const remplies = sections.filter((s) => Array.isArray(s.items) && s.items.length);
+
+    if (box) {
+      box.innerHTML = remplies
+        .map(
+          (s) => `
+        <div class="carte-section">
+          <h4 class="carte-section__titre">${escapeAttr(s.titre || "")}</h4>
+          <ul class="carte-liste">
+            ${s.items
+              .map(
+                (it) => `
+              <li class="carte-item">
+                <div class="carte-item__ligne">
+                  <span class="carte-item__nom">${escapeAttr(it.nom || "")}</span>
+                  <span class="carte-item__points" aria-hidden="true"></span>
+                  <span class="carte-item__prix">${escapeAttr(it.prix || "")}</span>
+                </div>
+                ${it.desc ? `<p class="carte-item__desc">${escapeAttr(it.desc)}</p>` : ""}
+              </li>`
+              )
+              .join("")}
+          </ul>
+        </div>`
+        )
+        .join("");
+    }
+
+    // --- On applique le choix ---
+    // Repli : si le mode choisi n'a rien a montrer, on bascule sur l'autre
+    // plutot que de laisser la section vide.
+    let afficher = mode;
+    if (mode === "plats" && !remplies.length) afficher = "pdf";
+    if (mode === "pdf" && !carte.pdf && remplies.length) afficher = "plats";
+
+    if (wrap) wrap.hidden = afficher !== "pdf";
+    if (box) box.hidden = afficher !== "plats";
   }
 
   /* --- Horaires par période (admin → Horaires) --- */

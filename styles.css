@@ -946,10 +946,12 @@ p:last-child{ margin-bottom:0 }
    16. Pied de page
    -------------------------------------------------------------------------- */
 
+/* Pied de page volontairement minimal : il ne porte plus que les mentions
+   légales, d'où une hauteur très réduite. */
 .footer{
   position:relative;
-  margin-top:clamp(56px,9vw,104px);
-  padding-block:var(--sp-7) var(--sp-6);
+  margin-top:clamp(40px,6vw,72px);
+  padding-block:var(--sp-4) var(--sp-4);
   border-top:1px solid var(--line-soft);
   background:color-mix(in srgb, var(--ink) 60%, transparent);
 }
@@ -970,37 +972,17 @@ p:last-child{ margin-bottom:0 }
   pointer-events:none;
 }
 
-.footer-grid{
-  display:grid;
-  grid-template-columns:1.2fr 1fr 1fr;
-  gap:var(--sp-6);
-  margin-bottom:var(--sp-6);
-}
 
-.footer-brand img{ height:44px; width:auto; margin-bottom:var(--sp-3) }
-.footer-tag{ color:var(--faint); font-size:14px; max-width:34ch; margin:0 }
 
-.footer-col__title{
-  font-family:var(--font-carved);
-  font-size:10px; letter-spacing:.24em; text-transform:uppercase;
-  color:var(--accent-txt);
-  margin:0 0 var(--sp-3);
-}
-.footer-col ul{ list-style:none; margin:0; padding:0; display:grid; gap:var(--sp-2) }
-.footer-col a,
-.footer-col li{ font-size:14px; color:var(--muted) }
-.footer-col a:hover{ color:var(--accent-txt) }
 
 .footer-bottom,
 .footer .links{
   display:flex; align-items:center; justify-content:space-between;
-  flex-wrap:wrap; gap:var(--sp-3);
-  padding-top:var(--sp-4);
-  border-top:1px solid var(--line-soft);
-  font-size:13px;
+  flex-wrap:wrap; gap:var(--sp-2) var(--sp-4);
+  font-size:12px;
   color:var(--faint);
 }
-.footer .legal{ display:flex; flex-wrap:wrap; gap:var(--sp-4) }
+.footer .legal{ display:flex; flex-wrap:wrap; gap:var(--sp-3) }
 .footer .legal a:hover,
 .footer-bottom a:hover{ color:var(--accent-txt) }
 
@@ -1526,8 +1508,6 @@ p:last-child{ margin-bottom:0 }
   .mobile-only{ display:inline-flex !important }
   .topbar .nav{ position:relative }
   .topbar .brand{ position:absolute; left:50%; transform:translateX(-50%) }
-  .footer-grid{ grid-template-columns:1fr 1fr }
-  .footer-brand{ grid-column:1 / -1 }
 }
 
 @media (max-width:720px){
@@ -1578,7 +1558,6 @@ p:last-child{ margin-bottom:0 }
   .cookie-banner-actions .cookie-btn{ flex:1 1 100% }
   .cookie-modal-footer .cookie-btn{ flex:1 1 100% }
 
-  .footer-grid{ grid-template-columns:1fr }
   .footer-bottom,
   .footer .links{ flex-direction:column; align-items:flex-start }
 }

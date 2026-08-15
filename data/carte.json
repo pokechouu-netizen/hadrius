@@ -54,12 +54,6 @@
           "nom": "Entrecôtes 200gr, frites maison , sauce 1/2 glace",
           "desc": "",
           "prix": "20€"
-        },
-        {
-          "id": "i10",
-          "nom": "Sauce au choix",
-          "desc": "Poivre ou chasseur",
-          "prix": "3 €"
         }
       ]
     },

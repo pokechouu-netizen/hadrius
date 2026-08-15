@@ -54,6 +54,12 @@
           "nom": "Entrecôtes 200gr, frites maison , sauce 1/2 glace",
           "desc": "",
           "prix": "20€"
+        },
+        {
+          "nom": "Filet de veau, mousseline de carotte et sauce morille",
+          "desc": "",
+          "prix": "24€",
+          "id": "i1786808112998"
         }
       ]
     },
